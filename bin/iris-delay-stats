@@ -15,7 +15,7 @@ my $dbname  = shift or die("Usage: $0 <station> <database>\n");
 
 my $first_run = not -e $dbname;
 
-my $dbh = DBI->connect("dbi:SQLite:dbname=$dbname", q{}, q{});
+my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbname", q{}, q{} );
 
 if ($first_run) {
 	my $query = qq{
@@ -31,44 +31,39 @@ if ($first_run) {
 			train_no int not null,
 			line_no int,
 			platform char(16),
-	} . join(', ', map { "msg_$_ boolean" } (1..99)) . ')';
+	} . join( ', ', map { "msg_$_ boolean" } ( 1 .. 99 ) ) . ')';
 	$dbh->do($query);
 }
 
 my $status = Travel::Status::DE::IRIS->new(
 	station   => $station,
-	lookahead => 60);
+	lookahead => 60
+);
 
-my @fields = (qw(train_id station raw_id scheduled_time delay
-	is_canceled destination train_type train_no line_no platform));
-push(@fields, map { "msg_$_" } (1..99));
-my $fieldlist = join(', ', @fields);
-my $field_placeholders = join(', ', ('?') x @fields);
+my @fields = (
+	qw(train_id station raw_id scheduled_time delay
+	  is_canceled destination train_type train_no line_no platform)
+);
+push( @fields, map { "msg_$_" } ( 1 .. 99 ) );
+my $fieldlist = join( ', ', @fields );
+my $field_placeholders = join( ', ', ('?') x @fields );
 my $insert_query = qq{
 	insert or replace into departures ( $fieldlist ) values ( $field_placeholders )
 };
 my $sth = $dbh->prepare($insert_query);
 
-for my $r ($status->results) {
+for my $r ( $status->results ) {
 
 	my @msgtypes = (0) x 99;
-	for my $m ($r->raw_messages) {
+	for my $m ( $r->raw_messages ) {
 		$msgtypes[ $m->[1] ] = 1;
 	}
 
 	$sth->execute(
-		$r->train_id,
-		$station,
-		$r->raw_id,
-		$r->datetime->epoch,
-		$r->delay,
-		$r->is_cancelled,
-		$r->destination,
-		$r->type,
-		$r->train_no,
-		$r->line_no,
-		$r->sched_platform,
-		@msgtypes
+		$r->train_id,        $station,           $r->raw_id,
+		$r->datetime->epoch, $r->delay,          $r->is_cancelled,
+		$r->destination,     $r->type,           $r->train_no,
+		$r->line_no,         $r->sched_platform, @msgtypes
 	);
 }
 
