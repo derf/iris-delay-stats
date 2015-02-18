@@ -22,7 +22,7 @@ if ($first_run) {
 		create table departures (
 			train_id int not null,
 			station char(10) not null,
-			raw_id char(64) not null primary key,
+			raw_id char(64) not null unique,
 			scheduled_time int not null,
 			delay int,
 			is_canceled boolean,
@@ -31,8 +31,19 @@ if ($first_run) {
 			train_no int not null,
 			line_no int,
 			platform char(16),
-	} . join( ', ', map { "msg_$_ boolean" } ( 1 .. 99 ) ) . ')';
+			primary key (train_id, scheduled_time)
+		)
+	};
 	$dbh->do($query);
+	for my $msg ( 1 .. 99 ) {
+		$dbh->do(
+			qq{create table msg_$msg (
+			train_id int not null,
+			scheduled_time int not null,
+			primary key (train_id, scheduled_time)
+		)}
+		);
+	}
 }
 
 my $status = Travel::Status::DE::IRIS->new(
@@ -44,7 +55,6 @@ my @fields = (
 	qw(train_id station raw_id scheduled_time delay
 	  is_canceled destination train_type train_no line_no platform)
 );
-push( @fields, map { "msg_$_" } ( 1 .. 99 ) );
 my $fieldlist = join( ', ', @fields );
 my $field_placeholders = join( ', ', ('?') x @fields );
 my $insert_query = qq{
@@ -52,19 +62,33 @@ my $insert_query = qq{
 };
 my $sth = $dbh->prepare($insert_query);
 
+my @msg_sth;
+for my $msg ( 1 .. 99 ) {
+	$msg_sth[$msg] = $dbh->prepare(
+		qq{insert or replace into msg_$msg
+		( train_id, scheduled_time ) values ( ?, ? ) }
+	);
+}
+
 for my $r ( $status->results ) {
 
-	my @msgtypes = (0) x 99;
+	my @msgtypes = (0) x 100;
 	for my $m ( $r->raw_messages ) {
 		$msgtypes[ $m->[1] ] = 1;
 	}
 
 	$sth->execute(
-		$r->train_id,        $station,           $r->raw_id,
-		$r->datetime->epoch, $r->delay,          $r->is_cancelled,
-		$r->destination,     $r->type,           $r->train_no,
-		$r->line_no,         $r->sched_platform, @msgtypes
+		$r->train_id,        $station,  $r->raw_id,
+		$r->datetime->epoch, $r->delay, $r->is_cancelled,
+		$r->destination,     $r->type,  $r->train_no,
+		$r->line_no,         $r->sched_platform
 	);
+
+	for my $msg ( 1 .. 99 ) {
+		if ( $msgtypes[$msg] ) {
+			$msg_sth[$msg]->execute( $r->train_id, $r->datetime->epoch );
+		}
+	}
 }
 
 __END__
