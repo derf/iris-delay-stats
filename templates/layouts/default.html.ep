@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title><%= stash('title') // 'iris-delay-stats' %></title>
+	<meta charset="utf-8">
+% if ($self->stash('refresh_interval')) {
+	<meta http-equiv="refresh" content="<%= $self->stash('refresh_interval') %>"/>
+% }
+
+
+	%= stylesheet '/default.css'
+	%= javascript '/d3.min.js'
+	%= javascript '/d3.tip.v0.6.3.js'
+</head>
+<body style="<%= (stash('hide_opts') ? 'margin: 0; padding: 0;' : q{}) %>">
+
+% if (my $error = stash 'error') {
+<div class="error">Backend-Fehler:</div>
+<div>
+<pre>
+%= $error
+</pre>
+</div>
+% }
+
+%= content
+
+<div class="about">
+<a href="http://finalrewind.org/projects/db-fakedisplay/">dbdb</a>
+v<%= stash('version') // '???' %>
+</div>
+
+</body>
+</html>
