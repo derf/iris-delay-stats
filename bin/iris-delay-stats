@@ -44,6 +44,8 @@ if ($first_run) {
 		)}
 		);
 	}
+	$dbh->do(qq{create view public_departures as
+		select * from departures where station == 'EDUV'});
 }
 
 my $status = Travel::Status::DE::IRIS->new(
