@@ -50,36 +50,42 @@ get '/by_hour.json' => sub {
 	return;
 };
 
-get '/by_hour.tsv' => sub {
+get '/by_time.tsv' => sub {
 	my $self = shift;
+	my $time = $self->param('time') // 'hour';
 	my $metric = $self->param('metric') // 'delay';
 
-	my ( $query, $text );
+	my $res = "x\ty\n";
+
+	my $query;
+	my $format = '%H';
+
+	if ($time eq 'weekday') {
+		$format = '%w';
+	}
 
 	given ($metric) {
 		when ('delay') {
-			$text  = "hour\tavgdelay\n";
 			$query = qq{
-				select strftime("%H", scheduled_time, "unixepoch") as time,
+				select strftime("$format", scheduled_time, "unixepoch") as time,
 				avg(delay) from $table group by time
 			};
 		}
 		when ('cancel_num') {
-			$text  = "hour\tavgdelay\n";
 			$query = qq{
-				select strftime("%H", scheduled_time, "unixepoch") as time,
-				avg(delay) as date from $table group by time
+				select strftime("$format", scheduled_time, "unixepoch") as time,
+				count(is_canceled) from $table group by time
 			};
 		}
 	}
 
-	my $res = $self->app->dbh->selectall_arrayref($query);
+	my $dbres = $self->app->dbh->selectall_arrayref($query);
 
-	for my $row ( @{$res} ) {
-		$text .= sprintf( "%s\t%s\n", @{$row} );
+	for my $row ( @{$dbres} ) {
+		$res .= sprintf( "%s\t%s\n", @{$row} );
 	}
 
-	$self->render( data => $text );
+	$self->render( data => $res );
 	return;
 };
 
