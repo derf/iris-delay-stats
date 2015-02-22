@@ -104,6 +104,18 @@ show_bargraph('/2ddata.tsv?aggregate=weekday&metric=cancel_percent', 'Anteil Zug
 show_bargraph('/2ddata.tsv?aggregate=weekhour&metric=delay', 'Durchschnittliche Verspätung nach Wochentag und Uhrzeit',
 	'Tag/Stunde', 'Minuten');
 
+show_bargraph('/2ddata.tsv?aggregate=line&metric=delay', 'Durchschnittliche Verspätung nach Linie',
+	'Typ', 'Minuten');
+
+show_bargraph('/2ddata.tsv?aggregate=line&metric=cancel_percent', 'Anteil Zugausfälle nach Linie',
+	'typ', 'Ausfälle [%]');
+
+show_bargraph('/2ddata.tsv?aggregate=train_type&metric=delay', 'Durchschnittliche Verspätung nach Zugtyp',
+	'Typ', 'Minuten');
+
+show_bargraph('/2ddata.tsv?aggregate=train_type&metric=cancel_percent', 'Anteil Zugausfälle nach Zugtyp',
+	'typ', 'Ausfälle [%]');
+
 msglist = [[2, 'Polizeiliche Ermittlung'],
 	[3, 'Feuerwehreinsatz neben der Strecke'],
 	[5, 'Aerztliche Versorgung eines Fahrgastes'],

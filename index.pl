@@ -60,6 +60,8 @@ get '/2ddata.tsv' => sub {
 		$msgnum = 0;
 	}
 
+	my $where_clause = '1 = 1';
+
 	my $res = "x\ty\n";
 
 	my $query;
@@ -72,25 +74,32 @@ get '/2ddata.tsv' => sub {
 		when ('weekhour') {
 			$format = 'strftime("%w%H", scheduled_time, "unixepoch")';
 		}
+		when ('line') {
+			$format = 'train_type || " " || line_no';
+			$where_clause = 'line_no is not null';
+		}
+		when ('train_type') {
+			$format = 'train_type';
+		}
 	}
 
 	given ($metric) {
 		when ('delay') {
 			$query = qq{
 				select $format as aggregate,
-				avg(delay) from $table where not is_canceled group by aggregate
+				avg(delay) from $table where not is_canceled and $where_clause group by aggregate
 			};
 		}
 		when ('cancel_num') {
 			$query = qq{
 				select $format as aggregate,
-				count(is_canceled) from $table group by aggregate
+				count(is_canceled) from $table where $where_clause group by aggregate
 			};
 		}
 		when ('cancel_percent') {
 			$query = qq{
 				select $format as aggregate,
-				avg(is_canceled) * 100 from $table group by aggregate
+				avg(is_canceled) * 100 from $table where $where_clause group by aggregate
 			};
 		}
 		when ('message_percent') {
@@ -98,7 +107,7 @@ get '/2ddata.tsv' => sub {
 				select $format as aggregate,
 				avg(msgtable.train_id is not null) * 100 from departures
 				left outer join msg_$msgnum as msgtable using
-				(scheduled_time, train_id) group by aggregate
+				(scheduled_time, train_id) where $where_clause group by aggregate
 			};
 		}
 	}
