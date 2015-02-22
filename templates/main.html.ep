@@ -89,11 +89,83 @@ function show_bargraph(datasource, title, xlab, ylab) {
   }
 }
 
-show_bargraph('/by_time.tsv?time=hour&metric=delay', 'Durchschnittliche Verspätung nach Uhrzeit',
+show_bargraph('/2ddata.tsv?aggregate=hour&metric=delay', 'Durchschnittliche Verspätung nach Uhrzeit',
 	'Angebrochene Stunde', 'Minuten');
 
-show_bargraph('/by_time.tsv?time=weekday&metric=delay', 'Durchschnittliche Verspätung nach Wochentag',
+show_bargraph('/2ddata.tsv?aggregate=hour&metric=cancel_percent', 'Anteil Zugausfälle nach Uhrzeit',
+	'Angebrochene Stunde', 'Ausfälle [%]');
+
+show_bargraph('/2ddata.tsv?aggregate=weekday&metric=delay', 'Durchschnittliche Verspätung nach Wochentag',
 	'Wochentag', 'Minuten');
+
+show_bargraph('/2ddata.tsv?aggregate=weekday&metric=cancel_percent', 'Anteil Zugausfälle nach Wochentag',
+	'Wochentag', 'Ausfälle [%]');
+
+show_bargraph('/2ddata.tsv?aggregate=weekhour&metric=delay', 'Durchschnittliche Verspätung nach Wochentag und Uhrzeit',
+	'Tag/Stunde', 'Minuten');
+
+msglist = [[2, 'Polizeiliche Ermittlung'],
+	[3, 'Feuerwehreinsatz neben der Strecke'],
+	[5, 'Aerztliche Versorgung eines Fahrgastes'],
+	[6, 'Betaetigen der Notbremse'],
+	[7, 'Personen im Gleis'],
+	[8, 'Notarzteinsatz am Gleis'],
+	[9, 'Streikauswirkungen'],
+	[10, 'Ausgebrochene Tiere im Gleis'],
+	[11, 'Unwetter'],
+	[13, 'Pass- und Zollkontrolle'],
+	[15, 'Beeintraechtigung durch Vandalismus'],
+	[16, 'Entschaerfung einer Fliegerbombe'],
+	[17, 'Beschaedigung einer Bruecke'],
+	[18, 'Umgestuerzter Baum im Gleis'],
+	[19, 'Unfall an einem Bahnuebergang'],
+	[20, 'Tiere im Gleis'],
+	[21, 'Warten auf weitere Reisende'],
+	[22, 'Witterungsbedingte Stoerung'],
+	[23, 'Feuerwehreinsatz auf Bahngelaende'],
+	[24, 'Verspaetung aus dem Ausland'],
+	[25, 'Warten auf verspaetete Zugteile'],
+	[28, 'Gegenstaende im Gleis'],
+	[31, 'Bauarbeiten'],
+	[32, 'Verzoegerung beim Ein-/Ausstieg'],
+	[33, 'Oberleitungsstoerung'],
+	[34, 'Signalstoerung'],
+	[35, 'Streckensperrung'],
+	[36, 'Technische Stoerung am Zug'],
+	[38, 'Technische Stoerung an der Strecke'],
+	[39, 'Anhaengen von zusaetzlichen Wagen'],
+	[40, 'Stellwerksstoerung/-ausfall'],
+	[41, 'Stoerung an einem Bahnuebergang'],
+	[42, 'Ausserplanmaessige Geschwindigkeitsbeschraenkung'],
+	[43, 'Verspaetung eines vorausfahrenden Zuges'],
+	[44, 'Warten auf einen entgegenkommenden Zug'],
+	[45, 'Ueberholung durch anderen Zug'],
+	[46, 'Warten auf freie Einfahrt'],
+	[47, 'Verspaetete Bereitstellung'],
+	[48, 'Verspaetung aus vorheriger Fahrt'],
+	[55, 'Technische Stoerung an einem anderen Zug'],
+	[56, 'Warten auf Fahrgaeste aus einem Bus'],
+	[57, 'Zusaetzlicher Halt'],
+	[58, 'Umleitung'],
+	[59, 'Schnee und Eis'],
+	[60, 'Reduzierte Geschwindigkeit wegen Sturm'],
+	[61, 'Tuerstoerung']];
+for (msg in msglist) {
+	show_bargraph('/2ddata.tsv?aggregate=hour&metric=message_percent&msgnum=' + msg[0],
+		'Anteil "'+msg[1]+'"', 'Angebrochene Stunde', '%');
+	show_bargraph('/2ddata.tsv?aggregate=weekday&metric=message_percent&msgnum=' + msg[0],
+		'Anteil "'+msg[1]+'"', 'Wochentag', '%');
+}
+
+show_bargraph('/2ddata.tsv?aggregate=hour&metric=message_percent&msgnum=80',
+	'Anteil "Abweichende Wagenreihung"', 'Angebrochene Stunde', '%');
+show_bargraph('/2ddata.tsv?aggregate=weekday&metric=message_percent&msgnum=80',
+	'Anteil "Abweichende Wagenreihung"', 'Wochentag', '%');
+
+show_bargraph('/2ddata.tsv?aggregate=hour&metric=message_percent&msgnum=85',
+	'Anteil "Ein Wagen fehlt"', 'Angebrochene Stunde', '%');
+show_bargraph('/2ddata.tsv?aggregate=weekday&metric=message_percent&msgnum=85',
+	'Anteil "Ein Wagen fehlt"', 'Wochentag', '%');
 
 % end
 

@@ -50,31 +50,55 @@ get '/by_hour.json' => sub {
 	return;
 };
 
-get '/by_time.tsv' => sub {
+get '/2ddata.tsv' => sub {
 	my $self = shift;
-	my $time = $self->param('time') // 'hour';
+	my $aggregate = $self->param('aggregate') // 'hour';
 	my $metric = $self->param('metric') // 'delay';
+	my $msgnum = int($self->param('msgnum') // 0);
+
+	if ($msgnum < 0 or $msgnum > 99) {
+		$msgnum = 0;
+	}
 
 	my $res = "x\ty\n";
 
 	my $query;
-	my $format = '%H';
+	my $format = 'strftime("%H", scheduled_time, "unixepoch")';
 
-	if ($time eq 'weekday') {
-		$format = '%w';
+	given($aggregate) {
+		when ('weekday') {
+			$format = 'strftime("%w", scheduled_time, "unixepoch")';
+		}
+		when ('weekhour') {
+			$format = 'strftime("%w%H", scheduled_time, "unixepoch")';
+		}
 	}
 
 	given ($metric) {
 		when ('delay') {
 			$query = qq{
-				select strftime("$format", scheduled_time, "unixepoch") as time,
-				avg(delay) from $table group by time
+				select $format as aggregate,
+				avg(delay) from $table where not is_canceled group by aggregate
 			};
 		}
 		when ('cancel_num') {
 			$query = qq{
-				select strftime("$format", scheduled_time, "unixepoch") as time,
-				count(is_canceled) from $table group by time
+				select $format as aggregate,
+				count(is_canceled) from $table group by aggregate
+			};
+		}
+		when ('cancel_percent') {
+			$query = qq{
+				select $format as aggregate,
+				avg(is_canceled) * 100 from $table group by aggregate
+			};
+		}
+		when ('message_percent') {
+			$query = qq{
+				select $format as aggregate,
+				avg(msgtable.train_id is not null) * 100 from departures
+				left outer join msg_$msgnum as msgtable using
+				(scheduled_time, train_id) group by aggregate
 			};
 		}
 	}
