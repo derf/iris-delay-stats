@@ -1,33 +1,33 @@
 %= javascript begin
 
 show_bargraph('/2ddata.tsv?aggregate=hour&metric=delay', 'Durchschnittliche Verspätung nach Uhrzeit',
-	'Angebrochene Stunde', 'Minuten');
+	'Angebrochene Stunde', 'Minuten', '.1f');
 
-show_bargraph('/2ddata.tsv?aggregate=hour&metric=cancel_percent', 'Anteil Zugausfälle nach Uhrzeit',
-	'Angebrochene Stunde', 'Ausfälle [%]');
+show_bargraph('/2ddata.tsv?aggregate=hour&metric=cancel_rate', 'Anteil Zugausfälle nach Uhrzeit',
+	'Angebrochene Stunde', 'Ausfälle', '.1%');
 
 show_bargraph('/2ddata.tsv?aggregate=weekday&metric=delay', 'Durchschnittliche Verspätung nach Wochentag',
-	'Wochentag', 'Minuten');
+	'Wochentag', 'Minuten', '.1f');
 
-show_bargraph('/2ddata.tsv?aggregate=weekday&metric=cancel_percent', 'Anteil Zugausfälle nach Wochentag',
-	'Wochentag', 'Ausfälle [%]');
+show_bargraph('/2ddata.tsv?aggregate=weekday&metric=cancel_rate', 'Anteil Zugausfälle nach Wochentag',
+	'Wochentag', 'Ausfälle', '.1%');
 
 show_bargraph('/2ddata.tsv?aggregate=weekhour&metric=delay', 'Durchschnittliche Verspätung nach Wochentag und Uhrzeit',
-	'Tag/Stunde', 'Minuten');
+	'Tag/Stunde', 'Minuten', '.1f');
 
 show_bargraph('/2ddata.tsv?aggregate=line&metric=delay', 'Durchschnittliche Verspätung nach Linie',
-	'Typ', 'Minuten');
+	'Typ', 'Minuten', '.1f');
 
-show_bargraph('/2ddata.tsv?aggregate=line&metric=cancel_percent', 'Anteil Zugausfälle nach Linie',
-	'typ', 'Ausfälle [%]');
+show_bargraph('/2ddata.tsv?aggregate=line&metric=cancel_rate', 'Anteil Zugausfälle nach Linie',
+	'typ', 'Ausfälle', '.1%');
 
 show_bargraph('/2ddata.tsv?aggregate=train_type&metric=delay', 'Durchschnittliche Verspätung nach Zugtyp',
-	'Typ', 'Minuten');
+	'Typ', 'Minuten', '.1f');
 
-show_bargraph('/2ddata.tsv?aggregate=train_type&metric=cancel_percent', 'Anteil Zugausfälle nach Zugtyp',
-	'typ', 'Ausfälle [%]');
+show_bargraph('/2ddata.tsv?aggregate=train_type&metric=cancel_rate', 'Anteil Zugausfälle nach Zugtyp',
+	'typ', 'Ausfälle', '.1%');
 
-msglist = [[2, 'Polizeiliche Ermittlung'],
+var msglist = [[2, 'Polizeiliche Ermittlung'],
 	[3, 'Feuerwehreinsatz neben der Strecke'],
 	[5, 'Aerztliche Versorgung eines Fahrgastes'],
 	[6, 'Betaetigen der Notbremse'],
@@ -74,21 +74,21 @@ msglist = [[2, 'Polizeiliche Ermittlung'],
 	[60, 'Reduzierte Geschwindigkeit wegen Sturm'],
 	[61, 'Tuerstoerung']];
 for (msg in msglist) {
-	show_bargraph('/2ddata.tsv?aggregate=hour&metric=message_percent&msgnum=' + msg[0],
-		'Anteil "'+msg[1]+'"', 'Angebrochene Stunde', '%');
-	show_bargraph('/2ddata.tsv?aggregate=weekday&metric=message_percent&msgnum=' + msg[0],
-		'Anteil "'+msg[1]+'"', 'Wochentag', '%');
+	show_bargraph('/2ddata.tsv?aggregate=hour&metric=message_rate&msgnum=' + msg[0],
+		'Anteil "'+msg[1]+'"', 'Angebrochene Stunde', '%', '.1%');
+	show_bargraph('/2ddata.tsv?aggregate=weekday&metric=message_rate&msgnum=' + msg[0],
+		'Anteil "'+msg[1]+'"', 'Wochentag', '%', '.1%');
 }
 
-show_bargraph('/2ddata.tsv?aggregate=hour&metric=message_percent&msgnum=80',
-	'Anteil "Abweichende Wagenreihung"', 'Angebrochene Stunde', '%');
-show_bargraph('/2ddata.tsv?aggregate=weekday&metric=message_percent&msgnum=80',
-	'Anteil "Abweichende Wagenreihung"', 'Wochentag', '%');
+show_bargraph('/2ddata.tsv?aggregate=hour&metric=message_rate&msgnum=80',
+	'Anteil "Abweichende Wagenreihung"', 'Angebrochene Stunde', '%', '.1%');
+show_bargraph('/2ddata.tsv?aggregate=weekday&metric=message_rate&msgnum=80',
+	'Anteil "Abweichende Wagenreihung"', 'Wochentag', '%', '.1%');
 
-show_bargraph('/2ddata.tsv?aggregate=hour&metric=message_percent&msgnum=85',
-	'Anteil "Ein Wagen fehlt"', 'Angebrochene Stunde', '%');
-show_bargraph('/2ddata.tsv?aggregate=weekday&metric=message_percent&msgnum=85',
-	'Anteil "Ein Wagen fehlt"', 'Wochentag', '%');
+show_bargraph('/2ddata.tsv?aggregate=hour&metric=message_rate&msgnum=85',
+	'Anteil "Ein Wagen fehlt"', 'Angebrochene Stunde', '%', '.1%');
+show_bargraph('/2ddata.tsv?aggregate=weekday&metric=message_rate&msgnum=85',
+	'Anteil "Ein Wagen fehlt"', 'Wochentag', '%', '.1%');
 
 % end
 

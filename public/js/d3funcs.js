@@ -1,9 +1,8 @@
-show_bargraph = function(datasource, title, xlab, ylab) {
+show_bargraph = function(datasource, title, xLabel, yLabel, yFormat) {
+
   var margin = {top: 40, right: 20, bottom: 30, left: 40},
       width = 960 - margin.left - margin.right,
       height = 500 - margin.top - margin.bottom;
-  
-  var formatPercent = d3.format(".0%");
   
   var x = d3.scale.ordinal()
       .rangeRoundBands([0, width], .1);
@@ -18,7 +17,10 @@ show_bargraph = function(datasource, title, xlab, ylab) {
   var yAxis = d3.svg.axis()
       .scale(y)
       .orient("left");
-  //    .tickFormat(formatPercent);
+
+  if (yFormat) {
+      yAxis = yAxis.tickFormat(d3.format(yFormat));
+  }
   
   var tip = d3.tip()
     .attr('class', 'd3-tip')
@@ -48,7 +50,7 @@ show_bargraph = function(datasource, title, xlab, ylab) {
         .attr("x", width / 2)
         .attr("y", 30)
         .style("text-anchor", "middle")
-        .text(xlab);
+        .text(xLabel);
   
     svg.append("g")
         .attr("class", "y axis")
@@ -58,7 +60,7 @@ show_bargraph = function(datasource, title, xlab, ylab) {
         .attr("y", 6)
         .attr("dy", ".71em")
         .style("text-anchor", "end")
-        .text(ylab);
+        .text(yLabel);
   
     svg.append("text")
       .attr("x", (width / 2))

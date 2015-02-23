@@ -96,16 +96,16 @@ get '/2ddata.tsv' => sub {
 				count(is_canceled) from $table where $where_clause group by aggregate
 			};
 		}
-		when ('cancel_percent') {
+		when ('cancel_rate') {
 			$query = qq{
 				select $format as aggregate,
-				avg(is_canceled) * 100 from $table where $where_clause group by aggregate
+				avg(is_canceled) from $table where $where_clause group by aggregate
 			};
 		}
-		when ('message_percent') {
+		when ('message_rate') {
 			$query = qq{
 				select $format as aggregate,
-				avg(msgtable.train_id is not null) * 100 from departures
+				avg(msgtable.train_id is not null) from departures
 				left outer join msg_$msgnum as msgtable using
 				(scheduled_time, train_id) where $where_clause group by aggregate
 			};
