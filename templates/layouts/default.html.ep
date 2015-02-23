@@ -8,9 +8,10 @@
 % }
 
 
-	%= stylesheet '/default.css'
-	%= javascript '/d3.min.js'
-	%= javascript '/d3.tip.v0.6.3.js'
+	%= stylesheet '/css/default.css'
+	%= javascript '/js/d3.min.js'
+	%= javascript '/js/d3.tip.v0.6.3.js'
+	%= javascript '/js/d3funcs.js'
 </head>
 <body style="<%= (stash('hide_opts') ? 'margin: 0; padding: 0;' : q{}) %>">
 
