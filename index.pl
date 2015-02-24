@@ -212,6 +212,12 @@ get '/all' => sub {
 	return;
 };
 
+get '/bar' => sub {
+	my $self = shift;
+	$self->render('bargraph');
+	return;
+};
+
 app->config(
 	hypnotoad => {
 		accepts  => 10,

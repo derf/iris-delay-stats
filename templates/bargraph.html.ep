@@ -1,0 +1,7 @@
+%= javascript begin
+
+show_bargraph('/2ddata.tsv?aggregate=<%= param('xsource') %>&metric=<%= param('ysource') %>',
+	'<%= param('title') %>',
+	'<%= param('xlabel') %>', '<%= param('ylabel') %>', '<%= param('yformat') %>',
+	'<%= param('width') %>', '<%= param('height') %>');
+% end
