@@ -51,12 +51,14 @@ get '/by_hour.json' => sub {
 };
 
 get '/2ddata.tsv' => sub {
-	my $self = shift;
+	my $self      = shift;
 	my $aggregate = $self->param('aggregate') // 'hour';
-	my $metric = $self->param('metric') // 'delay';
-	my $msgnum = int($self->param('msgnum') // 0);
+	my $metric    = $self->param('metric') // 'delay';
+	my $msgnum    = int( $self->param('msgnum') // 0 );
 
-	if ($msgnum < 0 or $msgnum > 99) {
+	my @weekdays = qw(So Mo Di Mi Do Fr Sa);
+
+	if ( $msgnum < 0 or $msgnum > 99 ) {
 		$msgnum = 0;
 	}
 
@@ -67,7 +69,7 @@ get '/2ddata.tsv' => sub {
 	my $query;
 	my $format = 'strftime("%H", scheduled_time, "unixepoch")';
 
-	given($aggregate) {
+	given ($aggregate) {
 		when ('weekday') {
 			$format = 'strftime("%w", scheduled_time, "unixepoch")';
 		}
@@ -75,7 +77,7 @@ get '/2ddata.tsv' => sub {
 			$format = 'strftime("%w%H", scheduled_time, "unixepoch")';
 		}
 		when ('line') {
-			$format = 'train_type || " " || line_no';
+			$format       = 'train_type || " " || line_no';
 			$where_clause = 'line_no is not null';
 		}
 		when ('train_type') {
@@ -113,6 +115,20 @@ get '/2ddata.tsv' => sub {
 	}
 
 	my $dbres = $self->app->dbh->selectall_arrayref($query);
+
+	if ( $aggregate eq 'weekday' ) {
+		@{$dbres} = map { [ $weekdays[ $_->[0] ], $_->[1] ] }
+		  ( @{$dbres}[ 1 .. 6 ], $dbres->[0] );
+	}
+	elsif ( $aggregate eq 'weekhour' ) {
+		@{$dbres} = map {
+			[
+				$weekdays[ substr( $_->[0], 0, 1 ) ] . q{ }
+				  . substr( $_->[0], 1 ),
+				$_->[1]
+			]
+		} ( @{$dbres}[ 1*24 .. 6*24 ], $dbres->[0] );
+	}
 
 	for my $row ( @{$dbres} ) {
 		$res .= sprintf( "%s\t%s\n", @{$row} );
