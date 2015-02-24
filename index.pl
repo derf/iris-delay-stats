@@ -112,6 +112,13 @@ get '/2ddata.tsv' => sub {
 				(scheduled_time, train_id) where $where_clause group by aggregate
 			};
 		}
+		when ('realtime_rate') {
+			$query = qq{
+				select $format as aggregate,
+				avg(delay is not null) from departures
+				where $where_clause group by aggregate
+			};
+		}
 	}
 
 	my $dbres = $self->app->dbh->selectall_arrayref($query);
@@ -127,7 +134,7 @@ get '/2ddata.tsv' => sub {
 				  . substr( $_->[0], 1 ),
 				$_->[1]
 			]
-		} ( @{$dbres}[ 1*24 .. 6*24 ], $dbres->[0] );
+		} ( @{$dbres}[ 1 * 24 .. 6 * 24 ], $dbres->[0] );
 	}
 
 	for my $row ( @{$dbres} ) {
