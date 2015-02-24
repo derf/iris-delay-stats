@@ -6,6 +6,12 @@ show_bargraph('/2ddata.tsv?aggregate=hour&metric=delay', 'Durchschnittliche Vers
 show_bargraph('/2ddata.tsv?aggregate=hour&metric=cancel_rate', 'Anteil Zugausfälle nach Uhrzeit',
 	'Angebrochene Stunde', 'Ausfälle', '.1%');
 
+//show_piechart('/2ddata.tsv?aggregate=weekday&metric=realtime_rate');
+show_bargraph('/2ddata.tsv?aggregate=line&metric=realtime_rate', 'Echtzeitdaten nach Linie',
+	'Linie', 'Echtzeitdaten', '.1%');
+show_bargraph('/2ddata.tsv?aggregate=train_type&metric=realtime_rate', 'Echtzeitdaten nach Zugtyp',
+	'Typ', 'Echtzeitdaten', '.1%', 600, 300);
+
 show_bargraph('/2ddata.tsv?aggregate=weekday&metric=delay', 'Durchschnittliche Verspätung nach Wochentag',
 	'Wochentag', 'Minuten', '.1f');
 
@@ -16,10 +22,10 @@ show_bargraph('/2ddata.tsv?aggregate=weekhour&metric=delay', 'Durchschnittliche 
 	'Tag/Stunde', 'Minuten', '.1f', 2048, 400);
 
 show_bargraph('/2ddata.tsv?aggregate=line&metric=delay', 'Durchschnittliche Verspätung nach Linie',
-	'Typ', 'Minuten', '.1f');
+	'Linea', 'Minuten', '.1f');
 
 show_bargraph('/2ddata.tsv?aggregate=line&metric=cancel_rate', 'Anteil Zugausfälle nach Linie',
-	'typ', 'Ausfälle', '.1%');
+	'Linea', 'Ausfälle', '.1%');
 
 show_bargraph('/2ddata.tsv?aggregate=train_type&metric=delay', 'Durchschnittliche Verspätung nach Zugtyp',
 	'Typ', 'Minuten', '.1f');
