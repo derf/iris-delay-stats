@@ -1,11 +1,20 @@
 % my $stats = globalstats();
 
 <div class="intro">
-dbdb fragt regelmäßig (ca. alle 10 Minuten) die Haltestellen
+dbdb fragt regelmäßig (ca. alle 10 Minuten) die Bahnhöfe
 <%= join(', ', @{$stats->{stationlist} // ['???']}) %> ab und berechnet Statistiken auf
 Basis der jeweiligen Zugabfahrten. Die Statistiken sind nicht offiziell
 und ein reines Freizeitprojekt, es gibt keine Garantie für Korrektheit oder
 Vollständigkeit. (Die Seite ist aus guten Gründen nicht-öffentlich).
+Die Bahnhofsliste wird ggf. noch erweitert, aber nicht signifikant wachsen.
+Im Zweifelsfall bleibt der Fokus im Ruhrgebiet.
+</div>
+
+<div class="usage">
+<b>Bitte beachten:</b>
+Einzelne Graphen / Statistiken dürfen gerne (<b>ohne</b> Quellenangabe)
+weitergegeben werden. Zugangsdaten bitte nur mit Verstand leaken. Im
+Zweifelsfall: We can neither deny nor confirm the existence of this database.
 </div>
 
 <div class="globalstats">
