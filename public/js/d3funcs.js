@@ -1,8 +1,15 @@
-show_bargraph = function(datasource, title, xLabel, yLabel, yFormat) {
+show_bargraph = function(datasource, title, xLabel, yLabel, yFormat, width, height) {
 
-  var margin = {top: 40, right: 20, bottom: 30, left: 40},
-      width = 960 - margin.left - margin.right,
-      height = 500 - margin.top - margin.bottom;
+  var margin = {top: 40, right: 20, bottom: 30, left: 40};
+
+  if (!width) {
+    width = 960;
+  }
+  if (!height) {
+    height = 500;
+  }
+  width -= margin.left + margin.right;
+  height -= margin.top + margin.bottom;
   
   var x = d3.scale.ordinal()
       .rangeRoundBands([0, width], .1);

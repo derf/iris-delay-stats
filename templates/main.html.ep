@@ -13,7 +13,7 @@ show_bargraph('/2ddata.tsv?aggregate=weekday&metric=cancel_rate', 'Anteil Zugaus
 	'Wochentag', 'Ausfälle', '.1%');
 
 show_bargraph('/2ddata.tsv?aggregate=weekhour&metric=delay', 'Durchschnittliche Verspätung nach Wochentag und Uhrzeit',
-	'Tag/Stunde', 'Minuten', '.1f');
+	'Tag/Stunde', 'Minuten', '.1f', 2048, 400);
 
 show_bargraph('/2ddata.tsv?aggregate=line&metric=delay', 'Durchschnittliche Verspätung nach Linie',
 	'Typ', 'Minuten', '.1f');
