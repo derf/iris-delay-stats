@@ -124,6 +124,9 @@ get '/2ddata.tsv' => sub {
 			$format       = 'train_type || " " || line_no';
 			$where_clause = 'line_no is not null';
 		}
+		when ('station') {
+			$format = 'station';
+		}
 		when ('train_type') {
 			$format = 'train_type';
 		}
