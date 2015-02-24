@@ -86,12 +86,6 @@ get '/2ddata.tsv' => sub {
 	}
 
 	given ($metric) {
-		when ('delay') {
-			$query = qq{
-				select $format as aggregate,
-				avg(delay) from $table where not is_canceled and $where_clause group by aggregate
-			};
-		}
 		when ('cancel_num') {
 			$query = qq{
 				select $format as aggregate,
@@ -102,6 +96,12 @@ get '/2ddata.tsv' => sub {
 			$query = qq{
 				select $format as aggregate,
 				avg(is_canceled) from $table where $where_clause group by aggregate
+			};
+		}
+		when ('delay') {
+			$query = qq{
+				select $format as aggregate,
+				avg(delay) from $table where not is_canceled and $where_clause group by aggregate
 			};
 		}
 		when ('message_rate') {
