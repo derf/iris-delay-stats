@@ -2,6 +2,10 @@ body {
   font: 10px sans-serif;
 }
 
+arc path {
+   stroke: #fff;
+}
+
 .axis path,
 .axis line {
   fill: none;
