@@ -1,0 +1,29 @@
+% my $stats = globalstats();
+
+<div class="intro">
+dbdb fragt regelmäßig (ca. alle 10 Minuten) die Haltestellen
+<%= join(', ', @{$stats->{stationlist} // ['???']}) %> ab und berechnet Statistiken auf
+Basis der jeweiligen Zugabfahrten. Die Statistiken sind nicht offiziell
+und ein reines Freizeitprojekt, es gibt keine Garantie für Korrektheit oder
+Vollständigkeit. (Die Seite ist aus guten Gründen nicht-öffentlich).
+</div>
+
+<div class="globalstats">
+Datengrundlage: <b><%= $stats->{departures} %></b> Fahrten
+an <b><%= $stats->{days} %></b> Tagen,
+davon
+<b><%= $stats->{realtime} %></b>
+(<b><%= sprintf('%.1f%%', $stats->{realtime_rate} * 100) %></b>) mit Echtzeitdaten.
+Es gab
+<b><%= $stats->{delayed} %></b> (<%= sprintf('%.1f%%', $stats->{delayed_rate} * 100) %>)
+Züge mit mehr als 5 Minuten Verspätung und
+<b><%= $stats->{canceled} %></b> (<%= sprintf('%.1f%%', $stats->{canceled_rate} * 100) %>)
+Zugausfälle. Pünktlich auf die Minute waren
+<b><%= $stats->{ontime} %></b> (<%= sprintf('%.1f%%', $stats->{ontime_rate} * 100) %>)
+Abfahrten.
+<br/>
+Insgesamt wurden
+<b><%= sprintf('%d', $stats->{delay_sum} / 60) %> Stunden</b> an Verspätungen eingefahren,
+dabei ist ein Zug durchschnittlich
+<b><%= sprintf('%.2f', $stats->{delay_avg}) %> Minuten</b> zu spät.
+</div>

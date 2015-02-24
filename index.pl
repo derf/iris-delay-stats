@@ -25,6 +25,50 @@ app->attr(
 	}
 );
 
+helper count_unique_column => sub {
+	my ($self, $column) = @_;
+	my $dbh = $self->app->dbh;
+
+	if (not $column) {
+		return scalar $dbh->selectall_arrayref("select count() from $table")->[0][0];
+	}
+	return scalar $dbh->selectall_arrayref("select count(distinct $column) from $table")->[0][0];
+};
+
+helper single_query => sub {
+	my ($self, $query) = @_;
+
+	return scalar $self->app->dbh->selectall_arrayref($query)->[0][0];
+};
+
+helper globalstats => sub {
+	my ($self) = @_;
+	my $dbh = $self->app->dbh;
+
+	my $stations = [ map { Travel::Status::DE::IRIS::Stations::get_station($_)->[1] }
+		@{ $self->app->dbh->selectcol_arrayref(
+		"select distinct station from $table") } ];
+
+	my $ret = {
+		departures => $self->count_unique_column(),
+		stationlist => $stations,
+		stations => $self->count_unique_column('station'),
+		realtime => $self->single_query("select count() from $table where delay is not null"),
+		realtime_rate => $self->single_query("select avg(delay is not null) from $table"),
+		ontime => $self->single_query("select count() from $table where delay < 1"),
+		ontime_rate => $self->single_query("select avg(delay < 1) from $table"),
+		days => $self->count_unique_column('strftime("%Y%m%d", scheduled_time, "unixepoch")'),
+		delayed => $self->single_query("select count() from $table where delay > 5"),
+		delayed_rate => $self->single_query("select avg(delay > 5) from $table"),
+		canceled => $self->single_query("select count() from $table where is_canceled > 0"),
+		canceled_rate => $self->single_query("select avg(is_canceled > 0) from $table"),
+		delay_sum => $self->single_query("select sum(delay) from $table"),
+		delay_avg => $self->single_query("select avg(delay) from $table"),
+	};
+
+	return $ret;
+};
+
 get '/by_hour.json' => sub {
 	my $self = shift;
 
@@ -107,7 +151,7 @@ get '/2ddata.tsv' => sub {
 		when ('message_rate') {
 			$query = qq{
 				select $format as aggregate,
-				avg(msgtable.train_id is not null) from departures
+				avg(msgtable.train_id is not null) from $table
 				left outer join msg_$msgnum as msgtable using
 				(scheduled_time, train_id) where $where_clause group by aggregate
 			};
@@ -115,7 +159,7 @@ get '/2ddata.tsv' => sub {
 		when ('realtime_rate') {
 			$query = qq{
 				select $format as aggregate,
-				avg(delay is not null) from departures
+				avg(delay is not null) from $table
 				where $where_clause group by aggregate
 			};
 		}
@@ -146,6 +190,13 @@ get '/2ddata.tsv' => sub {
 };
 
 get '/' => sub {
+	my $self = shift;
+
+	$self->render('intro');
+	return;
+};
+
+get '/all' => sub {
 	my $self = shift;
 	my $dbh  = $self->app->dbh;
 

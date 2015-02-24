@@ -1,4 +1,8 @@
 body {
+	font-family: sans-serif;
+}
+
+svg {
   font: 10px sans-serif;
 }
 
