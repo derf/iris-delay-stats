@@ -1,6 +1,6 @@
 show_bargraph = function(datasource, title, xLabel, yLabel, yFormat, width, height) {
 
-  var margin = {top: 40, right: 20, bottom: 30, left: 40};
+  var margin = {top: 40, right: 20, bottom: 40, left: 45};
 
   if (!width) {
     width = 960;

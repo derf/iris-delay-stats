@@ -36,3 +36,7 @@ Insgesamt wurden
 dabei ist ein Zug durchschnittlich
 <b><%= sprintf('%.2f', $stats->{delay_avg}) %> Minuten</b> zu spät.
 </div>
+
+<div class="forms">
+%= include 'barform';
+</div>

@@ -1,3 +1,5 @@
+%= include 'barform';
+
 %= javascript begin
 
 show_bargraph('/2ddata.tsv?aggregate=<%= param('xsource') %>&metric=<%= param('ysource') %>',

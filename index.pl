@@ -25,6 +25,54 @@ app->attr(
 	}
 );
 
+helper barplot_args => sub {
+	my ( $self ) = @_;
+
+	return {
+		x => {
+			hour => {
+				desc => 'Stunde',
+				label => 'Angebrochene Stunde',
+			},
+			line => {
+				desc => 'Linie',
+			},
+			station => {
+				desc => 'Bahnhof',
+			},
+			train_type => {
+				desc => 'Zugtyp',
+			},
+			weekday => {
+				desc => 'Wochentag',
+			},
+			weekhour => {
+				desc => 'Wochentag und Stunde',
+				label => 'Wochentag und angebrochene Stunde',
+			},
+		},
+		y => {
+			cancel_num => {
+				desc => 'Anzahl Zugausfälle',
+				label => 'Zugausfälle',
+			},
+			cancel_rate => {
+				desc => 'Zugausfälle',
+				yformat => '.1%',
+			},
+			delay => {
+				desc => 'Durchschnittliche Verspätung',
+				label => 'Minuten',
+				yformat => '.1f',
+			},
+			realtime_rate => {
+				desc => 'Echtzeitdaten vorhanden',
+				yformat => '.1%',
+			},
+		},
+	};
+};
+
 helper count_unique_column => sub {
 	my ( $self, $column ) = @_;
 	my $dbh = $self->app->dbh;
@@ -231,6 +279,25 @@ get '/all' => sub {
 
 get '/bar' => sub {
 	my $self = shift;
+
+	my $xsource = $self->param('xsource');
+	my $ysource = $self->param('ysource');
+
+	my %args = %{$self->barplot_args};
+
+	if (not $self->param('xlabel')) {
+		$self->param(xlabel => $args{x}{$xsource}{label} // $args{x}{$xsource}{desc});
+	}
+	if (not $self->param('ylabel')) {
+		$self->param(ylabel => $args{y}{$ysource}{label} // $args{y}{$ysource}{desc});
+	}
+	if (not $self->param('xformat') and $args{x}{$xsource}{xformat}) {
+		$self->param(xformat => $args{x}{$xsource}{xformat});
+	}
+	if (not $self->param('yformat') and $args{y}{$ysource}{yformat}) {
+		$self->param(yformat => $args{y}{$ysource}{yformat});
+	}
+
 	$self->render('bargraph');
 	return;
 };

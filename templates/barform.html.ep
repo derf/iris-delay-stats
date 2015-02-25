@@ -1,0 +1,17 @@
+%= form_for bar => begin
+Bargraph:
+% my %yargs = %{$self->barplot_args->{y}};
+% my @yarg_keys = sort keys %yargs;
+%= select_field ysource => [map {[$yargs{$_}->{desc}, $_]} @yarg_keys]
+aufgeteilt nach
+% my %xargs = %{$self->barplot_args->{x}};
+% my @xarg_keys = sort keys %xargs;
+%= select_field xsource => [map {[$xargs{$_}->{desc}, $_]} @xarg_keys]
+mit
+Abmessungen
+%= text_field 'width' => 960, class => 'dimension'
+x
+%= text_field 'height' => 500, class => 'dimension'
+Pixel.
+%= submit_button 'Go'
+% end
