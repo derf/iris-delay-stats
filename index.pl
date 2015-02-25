@@ -150,7 +150,7 @@ get '/2ddata.tsv' => sub {
 		when ('cancel_num') {
 			$query = qq{
 				select $format as aggregate,
-				count(is_canceled) from $table where $where_clause group by aggregate
+				count() from $table where is_canceled > 0 and $where_clause group by aggregate
 			};
 		}
 		when ('cancel_rate') {
