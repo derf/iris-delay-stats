@@ -52,6 +52,11 @@ helper barplot_args => sub {
 			},
 		},
 		y => {
+			avg_delay => {
+				desc => 'Durchschnittliche Verspätung',
+				label => 'Minuten',
+				yformat => '.1f',
+			},
 			cancel_num => {
 				desc => 'Anzahl Zugausfälle',
 				label => 'Zugausfälle',
@@ -60,10 +65,15 @@ helper barplot_args => sub {
 				desc => 'Zugausfälle',
 				yformat => '.1%',
 			},
-			delay => {
-				desc => 'Durchschnittliche Verspätung',
-				label => 'Minuten',
-				yformat => '.1f',
+			delay0_rate => {
+				desc => 'Verspätung = 0 Min.',
+				label => 'Verspätung = 0 Min.',
+				yformat => '.1%',
+			},
+			delay5_rate => {
+				desc => 'Verspätung > 5 Min.',
+				label => 'Verspätung über 5 Min.',
+				yformat => '.1%',
 			},
 			realtime_rate => {
 				desc => 'Echtzeitdaten vorhanden',
@@ -159,7 +169,7 @@ get '/by_hour.json' => sub {
 get '/2ddata.tsv' => sub {
 	my $self      = shift;
 	my $aggregate = $self->param('aggregate') // 'hour';
-	my $metric    = $self->param('metric') // 'delay';
+	my $metric    = $self->param('metric') // 'avg_delay';
 	my $msgnum    = int( $self->param('msgnum') // 0 );
 
 	my @weekdays = qw(So Mo Di Mi Do Fr Sa);
@@ -195,6 +205,12 @@ get '/2ddata.tsv' => sub {
 	}
 
 	given ($metric) {
+		when ('avg_delay') {
+			$query = qq{
+				select $format as aggregate,
+				avg(delay) from $table where not is_canceled and $where_clause group by aggregate
+			};
+		}
 		when ('cancel_num') {
 			$query = qq{
 				select $format as aggregate,
@@ -207,10 +223,16 @@ get '/2ddata.tsv' => sub {
 				avg(is_canceled) from $table where $where_clause group by aggregate
 			};
 		}
-		when ('delay') {
+		when ('delay0_rate') {
 			$query = qq{
 				select $format as aggregate,
-				avg(delay) from $table where not is_canceled and $where_clause group by aggregate
+				avg(delay < 1) from $table where $where_clause group by aggregate
+			};
+		}
+		when ('delay5_rate') {
+			$query = qq{
+				select $format as aggregate,
+				avg(delay > 5) from $table where $where_clause group by aggregate
 			};
 		}
 		when ('message_rate') {
