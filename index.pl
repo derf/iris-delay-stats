@@ -28,6 +28,13 @@ app->attr(
 helper barplot_args => sub {
 	my ( $self ) = @_;
 
+	my %translation = Travel::Status::DE::IRIS::Result::dump_message_codes();
+	my $messages;
+
+	for my $key (keys %translation) {
+		$messages->{$key} = { desc => $translation{$key} };
+	}
+
 	return {
 		x => {
 			hour => {
@@ -80,6 +87,7 @@ helper barplot_args => sub {
 				yformat => '.1%',
 			},
 		},
+		msg => $messages,
 	};
 };
 
@@ -304,8 +312,15 @@ get '/bar' => sub {
 
 	my $xsource = $self->param('xsource');
 	my $ysource = $self->param('ysource');
+	my $msgnum = $self->param('msgnum');
 
 	my %args = %{$self->barplot_args};
+
+	if ($self->param('want_msg')) {
+		$self->param(ysource => 'message_rate');
+		$self->param(ylabel => $args{msg}{$msgnum}{desc});
+		$self->param(yformat => '.1%');
+	}
 
 	if (not $self->param('xlabel')) {
 		$self->param(xlabel => $args{x}{$xsource}{label} // $args{x}{$xsource}{desc});

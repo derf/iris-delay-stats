@@ -1,8 +1,16 @@
 %= form_for bar => begin
-Bargraph:
+%= radio_button 'want_msg' => 0
+Allgemeiner Bargraph:
 % my %yargs = %{$self->barplot_args->{y}};
 % my @yarg_keys = sort keys %yargs;
 %= select_field ysource => [map {[$yargs{$_}->{desc}, $_]} @yarg_keys]
+<br/>
+%= radio_button 'want_msg' => 1
+Meldungs-Bargraph:
+% %yargs = %{$self->barplot_args->{msg}};
+% @yarg_keys = sort keys %yargs;
+%= select_field msgnum => [map {[$yargs{$_}->{desc}, $_]} @yarg_keys]
+<br/>
 aufgeteilt nach
 % my %xargs = %{$self->barplot_args->{x}};
 % my @xarg_keys = sort keys %xargs;

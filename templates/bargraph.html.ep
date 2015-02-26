@@ -2,7 +2,7 @@
 
 %= javascript begin
 
-show_bargraph('/2ddata.tsv?aggregate=<%= param('xsource') %>&metric=<%= param('ysource') %>',
+show_bargraph('/2ddata.tsv?aggregate=<%= param('xsource') %>&metric=<%= param('ysource') %>&msgnum=<%= param('msgnum') %>',
 	'<%= param('title') %>',
 	'<%= param('xlabel') %>', '<%= param('ylabel') %>', '<%= param('yformat') %>',
 	'<%= param('width') %>', '<%= param('height') %>');
