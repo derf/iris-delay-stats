@@ -1,3 +1,6 @@
+% if (not defined param('want_msg')) {
+%   param(want_msg => 0);
+% }
 %= form_for bar => begin
 %= radio_button 'want_msg' => 0
 Allgemeiner Bargraph:
