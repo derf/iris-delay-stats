@@ -27,7 +27,7 @@
 %= content
 
 <div class="about">
-<a href="http://finalrewind.org/projects/db-fakedisplay/">dbdb</a>
+<a href="https://github.com/derf/iris-delay-stats">dbdb</a>
 v<%= stash('version') // '???' %>
 </div>
 
