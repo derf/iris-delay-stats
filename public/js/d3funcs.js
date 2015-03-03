@@ -33,8 +33,14 @@ show_bargraph = function(datasource, title, xLabel, yLabel, yFormat, width, heig
     .attr('class', 'd3-tip')
     .offset([-10, 0])
     .html(function(d) {
-      return "<strong>Frequency:</strong> <span style='color:red'>" + d.y + "</span>";
-    })
+      if (d.y_matched == undefined) {
+        return "n=<span style='color:orangered'>" + d.y_total + "</span>";
+      }
+      else {
+        return "<span style='color:orangered'>" + d.y_matched + "</span> von " +
+               "<span style='color:orangered'>" + d.y_total + "</span>";
+      }
+    });
   
   var svg = d3.select("body").append("svg")
       .attr("width", width + margin.left + margin.right)

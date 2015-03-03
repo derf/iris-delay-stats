@@ -188,7 +188,7 @@ get '/2ddata.tsv' => sub {
 
 	my $where_clause = '1 = 1';
 
-	my $res = "x\ty\n";
+	my $res = "x\ty\ty_total\ty_matched\n";
 
 	my $query;
 	my $format = 'strftime("%H", scheduled_time, "unixepoch")';
@@ -215,46 +215,52 @@ get '/2ddata.tsv' => sub {
 	given ($metric) {
 		when ('avg_delay') {
 			$query = qq{
-				select $format as aggregate,
-				avg(delay) from $table where not is_canceled and $where_clause group by aggregate
+				select $format as aggregate, avg(delay), count()
+				from $table where not is_canceled and $where_clause group by aggregate
 			};
 		}
 		when ('cancel_num') {
 			$query = qq{
-				select $format as aggregate,
-				count() from $table where is_canceled > 0 and $where_clause group by aggregate
+				select $format as aggregate, count(), count()
+				from $table where is_canceled > 0 and $where_clause group by aggregate
 			};
 		}
 		when ('cancel_rate') {
 			$query = qq{
-				select $format as aggregate,
-				avg(is_canceled) from $table where $where_clause group by aggregate
+				select $format as aggregate, avg(is_canceled), count(),
+					sum(is_canceled = 1)
+				from $table where $where_clause group by aggregate
 			};
 		}
 		when ('delay0_rate') {
 			$query = qq{
-				select $format as aggregate,
-				avg(delay < 1) from $table where $where_clause group by aggregate
+				select $format as aggregate, avg(delay < 1), count(),
+					sum(delay < 1)
+				from $table where $where_clause group by aggregate
 			};
 		}
 		when ('delay5_rate') {
 			$query = qq{
-				select $format as aggregate,
-				avg(delay > 5) from $table where $where_clause group by aggregate
+				select $format as aggregate, avg(delay > 5), count(),
+					sum(delay > 5)
+				from $table where $where_clause group by aggregate
 			};
 		}
 		when ('message_rate') {
 			$query = qq{
 				select $format as aggregate,
-				avg(msgtable.train_id is not null) from $table
+				avg(msgtable.train_id is not null), count(),
+				sum(msgtable.train_id is not null)
+				from $table
 				left outer join msg_$msgnum as msgtable using
 				(scheduled_time, train_id) where $where_clause group by aggregate
 			};
 		}
 		when ('realtime_rate') {
 			$query = qq{
-				select $format as aggregate,
-				avg(delay is not null) from $table
+				select $format as aggregate, avg(delay is not null),
+					count(), sum(delay is not null)
+				from $table
 				where $where_clause group by aggregate
 			};
 		}
@@ -277,7 +283,7 @@ get '/2ddata.tsv' => sub {
 	}
 
 	for my $row ( @{$dbres} ) {
-		$res .= sprintf( "%s\t%s\n", @{$row} );
+		$res .= join("\t", @{$row} ) . "\n";
 	}
 
 	$self->render( data => $res );
