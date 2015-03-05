@@ -26,19 +26,19 @@ app->attr(
 );
 
 helper barplot_args => sub {
-	my ( $self ) = @_;
+	my ($self) = @_;
 
 	my %translation = Travel::Status::DE::IRIS::Result::dump_message_codes();
 	my $messages;
 
-	for my $key (keys %translation) {
+	for my $key ( keys %translation ) {
 		$messages->{$key} = { desc => $translation{$key} };
 	}
 
 	return {
 		x => {
 			hour => {
-				desc => 'Stunde',
+				desc  => 'Stunde',
 				label => 'Angebrochene Stunde',
 			},
 			line => {
@@ -54,36 +54,36 @@ helper barplot_args => sub {
 				desc => 'Wochentag',
 			},
 			weekhour => {
-				desc => 'Wochentag und Stunde',
+				desc  => 'Wochentag und Stunde',
 				label => 'Wochentag und angebrochene Stunde',
 			},
 		},
 		y => {
 			avg_delay => {
-				desc => 'Durchschnittliche Verspätung',
-				label => 'Minuten',
+				desc    => 'Durchschnittliche Verspätung',
+				label   => 'Minuten',
 				yformat => '.1f',
 			},
 			cancel_num => {
-				desc => 'Anzahl Zugausfälle',
+				desc  => 'Anzahl Zugausfälle',
 				label => 'Zugausfälle',
 			},
 			cancel_rate => {
-				desc => 'Zugausfälle',
+				desc    => 'Zugausfälle',
 				yformat => '.1%',
 			},
 			delay0_rate => {
-				desc => 'Verspätung = 0 Min.',
-				label => 'Verspätung = 0 Min.',
+				desc    => 'Verspätung = 0 Min.',
+				label   => 'Verspätung = 0 Min.',
 				yformat => '.1%',
 			},
 			delay5_rate => {
-				desc => 'Verspätung > 5 Min.',
-				label => 'Verspätung über 5 Min.',
+				desc    => 'Verspätung > 5 Min.',
+				label   => 'Verspätung über 5 Min.',
 				yformat => '.1%',
 			},
 			realtime_rate => {
-				desc => 'Echtzeitdaten vorhanden',
+				desc    => 'Echtzeitdaten vorhanden',
 				yformat => '.1%',
 			},
 		},
@@ -269,21 +269,22 @@ get '/2ddata.tsv' => sub {
 	my $dbres = $self->app->dbh->selectall_arrayref($query);
 
 	if ( $aggregate eq 'weekday' ) {
-		@{$dbres} = map { [ $weekdays[ $_->[0] ], $_->[1] ] }
-		  ( @{$dbres}[ 1 .. 6 ], $dbres->[0] );
+		for my $row ( @{$dbres} ) {
+			splice( @{$row}, 0, 1, $weekdays[ $row->[0] ] );
+		}
+		@{$dbres} = ( @{$dbres}[ 1 .. 6 ], $dbres->[0] );
 	}
 	elsif ( $aggregate eq 'weekhour' ) {
-		@{$dbres} = map {
-			[
-				$weekdays[ substr( $_->[0], 0, 1 ) ] . q{ }
-				  . substr( $_->[0], 1 ),
-				$_->[1]
-			]
-		} ( @{$dbres}[ 1 * 24 .. 6 * 24 ], $dbres->[0] );
+		for my $row ( @{$dbres} ) {
+			splice( @{$row}, 0, 1,
+				$weekdays[ substr( $row->[0], 0, 1 ) ] . q{ }
+				  . substr( $row->[0], 1 ) );
+		}
+		@{$dbres} = ( @{$dbres}[ 1 * 24 .. 7 * 24 - 1 ], @{$dbres}[ 0 .. 23 ] );
 	}
 
 	for my $row ( @{$dbres} ) {
-		$res .= join("\t", @{$row} ) . "\n";
+		$res .= join( "\t", @{$row} ) . "\n";
 	}
 
 	$self->render( data => $res );
@@ -318,27 +319,29 @@ get '/bar' => sub {
 
 	my $xsource = $self->param('xsource');
 	my $ysource = $self->param('ysource');
-	my $msgnum = $self->param('msgnum');
+	my $msgnum  = $self->param('msgnum');
 
-	my %args = %{$self->barplot_args};
+	my %args = %{ $self->barplot_args };
 
-	if ($self->param('want_msg')) {
-		$self->param(ysource => 'message_rate');
-		$self->param(ylabel => $args{msg}{$msgnum}{desc});
-		$self->param(yformat => '.1%');
+	if ( $self->param('want_msg') ) {
+		$self->param( ysource => 'message_rate' );
+		$self->param( ylabel  => $args{msg}{$msgnum}{desc} );
+		$self->param( yformat => '.1%' );
 	}
 
-	if (not $self->param('xlabel')) {
-		$self->param(xlabel => $args{x}{$xsource}{label} // $args{x}{$xsource}{desc});
+	if ( not $self->param('xlabel') ) {
+		$self->param( xlabel => $args{x}{$xsource}{label}
+			  // $args{x}{$xsource}{desc} );
 	}
-	if (not $self->param('ylabel')) {
-		$self->param(ylabel => $args{y}{$ysource}{label} // $args{y}{$ysource}{desc});
+	if ( not $self->param('ylabel') ) {
+		$self->param( ylabel => $args{y}{$ysource}{label}
+			  // $args{y}{$ysource}{desc} );
 	}
-	if (not $self->param('xformat') and $args{x}{$xsource}{xformat}) {
-		$self->param(xformat => $args{x}{$xsource}{xformat});
+	if ( not $self->param('xformat') and $args{x}{$xsource}{xformat} ) {
+		$self->param( xformat => $args{x}{$xsource}{xformat} );
 	}
-	if (not $self->param('yformat') and $args{y}{$ysource}{yformat}) {
-		$self->param(yformat => $args{y}{$ysource}{yformat});
+	if ( not $self->param('yformat') and $args{y}{$ysource}{yformat} ) {
+		$self->param( yformat => $args{y}{$ysource}{yformat} );
 	}
 
 	$self->render('bargraph');
