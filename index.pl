@@ -8,7 +8,7 @@ use utf8;
 
 no if $] >= 5.018, warnings => "experimental::smartmatch";
 
-#our $VERSION = qx{git describe --dirty} || '0.01';
+our $VERSION = qx{git describe --dirty} || '0.01';
 
 my $table = $ENV{DBDB_TABLE} // 'departures';
 
@@ -294,7 +294,7 @@ get '/2ddata.tsv' => sub {
 get '/' => sub {
 	my $self = shift;
 
-	$self->render('intro');
+	$self->render('intro', version => $VERSION);
 	return;
 };
 
