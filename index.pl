@@ -91,6 +91,46 @@ helper barplot_args => sub {
 	};
 };
 
+helper barplot_filters => sub {
+	my ($self) = @_;
+	my $dbh = $self->app->dbh;
+
+	my $ret = {
+		lines => [
+			map { $_->[0] } @{
+				$dbh->selectall_arrayref(
+"select distinct train_type || ' ' || line_no as line from $table order by line"
+				)
+			}
+		],
+		train_types => [
+			q{},
+			map { $_->[0] } @{
+				$dbh->selectall_arrayref(
+					"select distinct train_type from $table order by train_type"
+				)
+			}
+		],
+		stations => [
+			q{},
+			map { $_->[0] } @{
+				$dbh->selectall_arrayref(
+					"select distinct station from $table order by station")
+			}
+		],
+		destinations => [
+			q{},
+			map { $_->[0] } @{
+				$dbh->selectall_arrayref(
+"select distinct destination from $table order by destination"
+				)
+			}
+		],
+	};
+
+	return $ret;
+};
+
 helper count_unique_column => sub {
 	my ( $self, $column ) = @_;
 	my $dbh = $self->app->dbh;
@@ -294,7 +334,7 @@ get '/2ddata.tsv' => sub {
 get '/' => sub {
 	my $self = shift;
 
-	$self->render('intro', version => $VERSION);
+	$self->render( 'intro', version => $VERSION );
 	return;
 };
 
