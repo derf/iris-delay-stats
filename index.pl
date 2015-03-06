@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite;
 use DBI;
+use Encode qw(decode);
 use Travel::Status::DE::IRIS;
 use Travel::Status::DE::IRIS::Stations;
 use 5.014;
@@ -120,7 +121,7 @@ helper barplot_filters => sub {
 		],
 		destinations => [
 			q{},
-			map { $_->[0] } @{
+			map { decode('utf8', $_->[0]) } @{
 				$dbh->selectall_arrayref(
 "select distinct destination from $table order by destination"
 				)
