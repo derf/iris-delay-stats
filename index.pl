@@ -444,6 +444,7 @@ get '/top10' => sub {
 	my $where_clause = '1=1';
 
 	my ( $filter, $filter_clause ) = $self->parse_filter_args;
+	my %translation = Travel::Status::DE::IRIS::Result::dump_message_codes();
 
 	my @rates;
 	my $dbh = $self->app->dbh;
@@ -462,8 +463,16 @@ get '/top10' => sub {
 		};
 		$rates[$msgnum] = $self->app->dbh->selectall_arrayref($query)->[0][0];
 
-		say $rates[$msgnum] / $total;
+		say "$msgnum: " . $rates[$msgnum] / $total;
 	}
+
+	my @argsort = reverse sort { $rates[$a] <=> $rates[$b] } ( 1 .. 99 );
+
+	for my $i (@argsort[0 .. 10]) {
+		printf("%s: %.2f%%\n", $translation{$i}, $rates[$i] * 100 / $total);
+	}
+
+	say join(' ', @argsort[0 .. 10]);
 
 	$self->render( 'intro', );
 	return;
