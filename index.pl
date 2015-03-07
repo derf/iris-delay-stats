@@ -121,7 +121,7 @@ helper barplot_filters => sub {
 		],
 		destinations => [
 			q{},
-			map { decode('utf8', $_->[0]) } @{
+			map { decode( 'utf8', $_->[0] ) } @{
 				$dbh->selectall_arrayref(
 "select distinct destination from $table order by destination"
 				)
@@ -221,6 +221,24 @@ get '/2ddata.tsv' => sub {
 	my $metric    = $self->param('metric') // 'avg_delay';
 	my $msgnum    = int( $self->param('msgnum') // 0 );
 
+	my %filter = (
+		line        => scalar $self->param('filter_line'),
+		train_type  => scalar $self->param('filter_train_type'),
+		station     => scalar $self->param('filter_station'),
+		destination => scalar $self->param('filter_destination'),
+		delay_min   => scalar $self->param('filter_delay_min'),
+		delay_max   => scalar $self->param('filter_delay_max'),
+	);
+
+	for my $key ( keys %filter ) {
+		$filter{$key} =~ tr{a-zA-Z0-9öäüÖÄÜß }{}cd;
+	}
+
+	$filter{delay_min}
+	  = length( $filter{delay_min} ) ? int( $filter{delay_min} ) : undef;
+	$filter{delay_max}
+	  = length( $filter{delay_max} ) ? int( $filter{delay_max} ) : undef;
+
 	my @weekdays = qw(So Mo Di Mi Do Fr Sa);
 
 	if ( $msgnum < 0 or $msgnum > 99 ) {
@@ -251,6 +269,27 @@ get '/2ddata.tsv' => sub {
 		when ('train_type') {
 			$format = 'train_type';
 		}
+	}
+
+	if ( $filter{line} ) {
+		my ( $train_type, $line_no ) = split( / /, $filter{line} );
+		$where_clause
+		  .= " and train_type = '$train_type' and line_no = '$line_no'";
+	}
+	if ( $filter{train_type} ) {
+		$where_clause .= " and train_type = '$filter{train_type}'";
+	}
+	if ( $filter{station} ) {
+		$where_clause .= " and station = '$filter{station}'";
+	}
+	if ( $filter{destination} ) {
+		$where_clause .= " and destination = '$filter{destination}'";
+	}
+	if ( defined $filter{delay_min} ) {
+		$where_clause .= " and delay >= $filter{delay_min}";
+	}
+	if ( defined $filter{delay_max} ) {
+		$where_clause .= " and delay <= $filter{delay_max}";
 	}
 
 	given ($metric) {
