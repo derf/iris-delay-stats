@@ -1,0 +1,10 @@
+%= include 'topform';
+
+<div class="toplist">
+<table>
+<tr><th>Meldung</th><th>Anteil</th><th>Anzahl</th></tr>
+% for my $entry (@{ stash('toplist') // [] }) {
+<tr><td><%= $entry->[0] %></td><td><%= $entry->[1] %></td><td><%= $entry->[2] %></td></tr>
+% }
+</table>
+</div>

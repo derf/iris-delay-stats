@@ -38,5 +38,9 @@ dabei ist ein Zug durchschnittlich
 </div>
 
 <div class="forms">
+<b>Bargraph</b>:
 %= include 'barform';
+<br/>
+<b>Top-Liste</b>:
+%= include 'topform';
 </div>

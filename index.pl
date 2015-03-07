@@ -439,7 +439,7 @@ get '/bar' => sub {
 	return;
 };
 
-get '/top10' => sub {
+get '/top' => sub {
 	my $self         = shift;
 	my $where_clause = '1=1';
 
@@ -462,19 +462,18 @@ get '/top10' => sub {
 			(scheduled_time, train_id) where $where_clause
 		};
 		$rates[$msgnum] = $self->app->dbh->selectall_arrayref($query)->[0][0];
-
-		say "$msgnum: " . $rates[$msgnum] / $total;
 	}
 
 	my @argsort = reverse sort { $rates[$a] <=> $rates[$b] } ( 1 .. 99 );
+	my @toplist = map {
+		[
+			$translation{$_} // $_,
+			sprintf( '%.2f%%', $rates[$_] * 100 / $total ),
+			$rates[$_]
+		]
+	} @argsort;
 
-	for my $i (@argsort[0 .. 10]) {
-		printf("%s: %.2f%%\n", $translation{$i}, $rates[$i] * 100 / $total);
-	}
-
-	say join(' ', @argsort[0 .. 10]);
-
-	$self->render( 'intro', );
+	$self->render( 'toplist', toplist => \@toplist );
 	return;
 };
 
