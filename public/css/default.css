@@ -2,6 +2,13 @@ body {
 	font-family: sans-serif;
 }
 
+div.about {
+	position: absolute;
+	top: 0.5em;
+	right: 0.5em;
+	color: #666666;
+}
+
 input, select {
 	border: 1px solid black;
 }

@@ -27,8 +27,7 @@
 %= content
 
 <div class="about">
-<a href="https://github.com/derf/iris-delay-stats">dbdb</a>
-v<%= stash('version') // '???' %>
+version <%= stash('version') // '???' %>
 </div>
 
 </body>

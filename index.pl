@@ -401,6 +401,7 @@ get '/all' => sub {
 	$self->render(
 		'main',
 		num_departures => $num_departures,
+		version        => $VERSION,
 	);
 	return;
 };
@@ -435,7 +436,7 @@ get '/bar' => sub {
 		$self->param( yformat => $args{y}{$ysource}{yformat} );
 	}
 
-	$self->render('bargraph');
+	$self->render( 'bargraph', version => $VERSION );
 	return;
 };
 
@@ -473,7 +474,11 @@ get '/top' => sub {
 		]
 	} @argsort;
 
-	$self->render( 'toplist', toplist => \@toplist );
+	$self->render(
+		'toplist',
+		toplist => \@toplist,
+		version => $VERSION
+	);
 	return;
 };
 
