@@ -3,8 +3,13 @@
 <div class="toplist">
 <table>
 <tr><th>Meldung</th><th>Anteil</th><th>Anzahl</th></tr>
+% my $max = stash('toplist')->[0][2];
 % for my $entry (@{ stash('toplist') // [] }) {
-<tr><td><%= $entry->[0] %></td><td><%= $entry->[1] %></td><td><%= $entry->[2] %></td></tr>
+% my ($desc, $percent, $raw) = @{$entry};
+<tr>
+<td style="position: relative;"><div style="z-index: -1; position: absolute; width:<%= int($raw * 100 / $max) %>%; background-color: #e2e2e2;">&nbsp;</div><%= $desc %></td>
+<td><%= $percent %></td>
+<td><%= $raw %></td></tr>
 % }
 </table>
 </div>
