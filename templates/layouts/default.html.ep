@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title><%= stash('title') // 'iris-delay-stats' %></title>
+	<title><%= stash('title') ? "dbdb - " . stash('title') : 'dbdb' %></title>
 	<meta charset="utf-8">
 % if ($self->stash('refresh_interval')) {
 	<meta http-equiv="refresh" content="<%= $self->stash('refresh_interval') %>"/>

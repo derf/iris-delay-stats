@@ -436,7 +436,11 @@ get '/bar' => sub {
 		$self->param( yformat => $args{y}{$ysource}{yformat} );
 	}
 
-	$self->render( 'bargraph', version => $VERSION );
+	$self->render(
+		'bargraph',
+		title   => 'bargraph',
+		version => $VERSION,
+	);
 	return;
 };
 
@@ -476,8 +480,9 @@ get '/top' => sub {
 
 	$self->render(
 		'toplist',
+		title   => 'toplist',
 		toplist => \@toplist,
-		version => $VERSION
+		version => $VERSION,
 	);
 	return;
 };
