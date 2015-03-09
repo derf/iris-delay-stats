@@ -34,7 +34,7 @@ Optionale Einschränkungen:
     Linie:
   </div>
   <div>
-    %= select_field filter_line => [map {[$_, $_]} @{$filter_opts->{lines}} ]
+    %= select_field filter_line => $filter_opts->{lines}
   </div>
 </div>
 <div class="field">
@@ -42,7 +42,7 @@ Optionale Einschränkungen:
     Zugtyp:
   </div>
   <div>
-    %= select_field filter_train_type => [map {[$_, $_]} @{$filter_opts->{train_types}} ]
+    %= select_field filter_train_type => $filter_opts->{train_types}
   </div>
 </div>
 <div class="field">
@@ -50,7 +50,7 @@ Optionale Einschränkungen:
     Bahnhof:
   </div>
   <div>
-    %= select_field filter_station => [map {[$_, $_]} @{$filter_opts->{stations}} ]
+    %= select_field filter_station => $filter_opts->{stations}
   </div>
 </div>
 <div class="field">
@@ -58,7 +58,7 @@ Optionale Einschränkungen:
     Zielbahnhof:
   </div>
   <div>
-    %= select_field filter_destination => [map {[$_, $_]} @{$filter_opts->{destinations}} ]
+    %= select_field filter_destination => $filter_opts->{destinations}
   </div>
 </div>
 <div class="field">

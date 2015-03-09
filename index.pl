@@ -98,7 +98,7 @@ helper barplot_filters => sub {
 
 	my $ret = {
 		lines => [
-			map { $_->[0] } @{
+			map { [ $_->[0], $_->[0] ] } @{
 				$dbh->selectall_arrayref(
 "select distinct train_type || ' ' || line_no as line from $table order by line"
 				)
@@ -106,7 +106,7 @@ helper barplot_filters => sub {
 		],
 		train_types => [
 			q{},
-			map { $_->[0] } @{
+			map { [ $_->[0], $_->[0] ] } @{
 				$dbh->selectall_arrayref(
 					"select distinct train_type from $table order by train_type"
 				)
@@ -114,14 +114,20 @@ helper barplot_filters => sub {
 		],
 		stations => [
 			q{},
-			map { $_->[0] } @{
+			map {
+				[
+					Travel::Status::DE::IRIS::Stations::get_station( $_->[0] )
+					  ->[1],
+					$_->[0]
+				]
+			  } @{
 				$dbh->selectall_arrayref(
 					"select distinct station from $table order by station")
-			}
+			  }
 		],
 		destinations => [
 			q{},
-			map { decode( 'utf8', $_->[0] ) } @{
+			map { [ decode( 'utf8', $_->[0] ), decode( 'utf8', $_->[0] ) ] } @{
 				$dbh->selectall_arrayref(
 "select distinct destination from $table order by destination"
 				)
