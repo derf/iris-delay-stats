@@ -1,9 +1,8 @@
 <div>
 %= form_for top => begin
-%= submit_button 'Go'
-<br/>
 % my $filter_opts = $self->barplot_filters;
-Optionale Einschränkungen:
+Nach Häufigkeit sortierte Verspätungs- und Qualitätsmeldungen.
+Die Einschränkungen sind alle optional.
 <div class="field">
   <div class="desc">
     Linie:
@@ -45,6 +44,7 @@ Optionale Einschränkungen:
     und
     %= text_field 'filter_delay_max', class => 'delay', placeholder => '+∞'
     Minuten (inklusive).
+    %= submit_button 'Go'
   </div>
 </div>
 % end

@@ -70,6 +70,7 @@ Optionale Einschränkungen:
     und
     %= text_field 'filter_delay_max', class => 'delay', placeholder => '+∞'
     Minuten (inklusive).
+    %= submit_button 'Go'
   </div>
 </div>
 % end
