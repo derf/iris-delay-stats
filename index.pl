@@ -415,17 +415,53 @@ get '/all' => sub {
 get '/bar' => sub {
 	my $self = shift;
 
-	my $xsource = $self->param('xsource');
-	my $ysource = $self->param('ysource');
-	my $msgnum  = $self->param('msgnum');
+	my $xsource  = $self->param('xsource');
+	my $ysource  = $self->param('ysource');
+	my $want_msg = $self->param('want_msg');
+	my $msgnum   = $self->param('msgnum');
+	my ( $title, @title_filter_strings );
 
 	my %args = %{ $self->barplot_args };
 
-	if ( $self->param('want_msg') ) {
+	if ($want_msg) {
 		$self->param( ysource => 'message_rate' );
 		$self->param( ylabel  => $args{msg}{$msgnum}{desc} );
 		$self->param( yformat => '.1%' );
+		$title = sprintf( '"%s" pro %s',
+			$args{msg}{$msgnum}{desc},
+			$args{x}{$xsource}{desc} );
 	}
+	else {
+		$title = sprintf( '%s pro %s',
+			$args{y}{$ysource}{desc},
+			$args{x}{$xsource}{desc} );
+	}
+
+	if ( $self->param('filter_line') ) {
+		push( @title_filter_strings, 'Linie ' . $self->param('filter_line') );
+	}
+	if ( $self->param('filter_train_type') ) {
+		push( @title_filter_strings,
+			'Zugtyp ' . $self->param('filter_train_type') );
+	}
+	if ( $self->param('filter_station') ) {
+		push(
+			@title_filter_strings,
+			'in '
+			  . Travel::Status::DE::IRIS::Stations::get_station(
+				$self->param('filter_station')
+			  )->[1]
+		);
+	}
+	if ( $self->param('filter_destination') ) {
+		push( @title_filter_strings,
+			'Züge nach ' . $self->param('filter_destination') );
+	}
+	if (@title_filter_strings) {
+		$title .= ' (' . join( ', ', @title_filter_strings ) . ')';
+	}
+
+	$self->param( title => $title );
 
 	if ( not $self->param('xlabel') ) {
 		$self->param( xlabel => $args{x}{$xsource}{label}
