@@ -9,6 +9,12 @@ div.globalstats {
 	margin-bottom: 1em;
 }
 
+div.error {
+	color: orangered;
+	font-weight: bold;
+	margin: 2em;
+}
+
 div.about {
 	position: absolute;
 	top: 0.5em;

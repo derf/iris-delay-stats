@@ -512,13 +512,16 @@ get '/top' => sub {
 	}
 
 	my @argsort = reverse sort { $rates[$a] <=> $rates[$b] } ( 1 .. 99 );
-	my @toplist = map {
-		[
-			$translation{$_} // $_,
-			sprintf( '%.2f%%', $rates[$_] * 100 / $total ),
-			$rates[$_]
-		]
-	} @argsort;
+	my @toplist;
+	if ( $total > 0 ) {
+		@toplist = map {
+			[
+				$translation{$_} // $_,
+				sprintf( '%.2f%%', $rates[$_] * 100 / $total ),
+				$rates[$_]
+			]
+		} @argsort;
+	}
 
 	$self->render(
 		'toplist',

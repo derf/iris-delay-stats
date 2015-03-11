@@ -1,5 +1,11 @@
 %= include 'topform';
 
+% if (@{$toplist} == 0) {
+<div class="error">
+Keine Daten mit diesen Parametern gefunden.
+</div>
+% }
+% else {
 <div class="toplist">
 <table>
 <tr><th>Meldung</th><th>Anteil</th><th>Anzahl</th></tr>
@@ -13,3 +19,4 @@
 % }
 </table>
 </div>
+% }
