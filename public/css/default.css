@@ -2,6 +2,13 @@ body {
 	font-family: sans-serif;
 }
 
+div.intro,
+div.usage,
+div.stationlist,
+div.globalstats {
+	margin-bottom: 1em;
+}
+
 div.about {
 	position: absolute;
 	top: 0.5em;
