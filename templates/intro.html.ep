@@ -1,24 +1,39 @@
 % my $stats = globalstats();
 
+<b>dbdb</b>
+
 <div class="intro">
-dbdb fragt regelmäßig (ca. alle 10 Minuten) die Bahnhöfe
-<%= join(', ', @{$stats->{stationlist} // ['???']}) %> ab und berechnet Statistiken auf
-Basis der jeweiligen Zugabfahrten. Die Statistiken sind nicht offiziell
-und ein reines Freizeitprojekt, es gibt keine Garantie für Korrektheit oder
-Vollständigkeit. (Die Seite ist aus guten Gründen nicht-öffentlich).
-Die Bahnhofsliste wird ggf. noch erweitert, aber nicht signifikant wachsen.
-Im Zweifelsfall bleibt der Fokus im Ruhrgebiet.
+Diese Seite sammelt Ankunfts- und Abfahrtsdaten einiger deutschen Bahnhöfe und
+berechnet daraus Statistiken zu Pünktlichkeit, Verspätungsmeldungen und
+ähnlichem. Das ist ein reines Freizeitprojekt (und aktuell ziemlich unfertig),
+für die Korrektheit und Vollständigkeit gibt es selbstverständlich keine
+Garantie. Vernünftiges Layout und Design kommt irgendwann™ mal.
 </div>
 
+<b>Datengrundlage</b>
+<div>
+Alle 10 Minuten werden folgende Bahnhöfe abgefragt:
+<ul>
+% for my $station (@{$stats->{stationlist}}) {
+<li><%= $station %></li>
+% }
+</ul>
+Die Liste kann noch erweitert werden, mehr als 10 Bahnhöfe sollten es aber
+nicht werden.
+</div>
+
+<b>Bitte beachten</b>
 <div class="usage">
-<b>Bitte beachten:</b>
+Die Deutsche Bahn ist über eine solche Statistiksammlung möglicherweise
+nicht ganz glücklich, daher bleibt diese Seite nichtöffentlich.
 Einzelne Graphen / Statistiken dürfen gerne (<b>ohne</b> Quellenangabe)
-weitergegeben werden. Zugangsdaten bitte nur mit Verstand leaken. Im
-Zweifelsfall: We can neither deny nor confirm the existence of this database.
+weitergegeben werden. Zugangsdaten (soweit vorhanden) bitte nur mit
+Verstand weitergeben, im Zweifelsfall werden sie irgendwann geändert.
 </div>
 
+<b>Datengrundlage</b>
 <div class="globalstats">
-Datengrundlage: <b><%= $stats->{departures} %></b> Fahrten
+In der Datenbank sind <b><%= $stats->{departures} %></b> Fahrten
 an <b><%= $stats->{days} %></b> Tagen,
 davon
 <b><%= $stats->{realtime} %></b>
