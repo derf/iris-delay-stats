@@ -1,0 +1,257 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use 5.010;
+
+use DBI;
+use Encode qw(decode);
+use List::Util qw(first);
+use Travel::Status::DE::IRIS;
+
+our $VERSION = '0.00';
+
+my $dbname = shift // 'dbdb';
+
+my $old_dbh = DBI->connect( "dbi:SQLite:dbname=iris.sqlite", q{}, q{} );
+my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=localhost;port=5432",
+	'dbdb', $ENV{DBDB_PASSWORD} );
+
+sub int_or_undef {
+	my ($val) = @_;
+
+	if ( defined $val and length($val) and int($val) != 0 ) {
+		return int($val);
+	}
+	return undef;
+}
+
+sub table_exists {
+	my ($table_name) = @_;
+	my $sth = $dbh->table_info( undef, 'public', $table_name, 'TABLE' );
+
+	$sth->execute;
+	my @info = $sth->fetchrow_array;
+
+	my $exists = scalar @info;
+	return $exists;
+}
+
+sub table_has_departure {
+	my ( $table, $train_id, $scheduled_time ) = @_;
+	my $res
+	  = $dbh->selectall_arrayref(
+"select count(*) from $table where train_id = $train_id and scheduled_time = to_timestamp($scheduled_time)"
+	  )->[0][0];
+
+	if ( $res > 0 ) {
+		return 1;
+	}
+	return 0;
+}
+
+sub get_id {
+	my ( $table, $name ) = @_;
+
+	if ( not defined $name ) {
+		return undef;
+	}
+
+	$name = decode( 'utf-8', $name );
+	my $res
+	  = $dbh->selectall_arrayref("select id from $table where name = '$name'");
+	if ( @{$res} ) {
+		return $res->[0][0];
+	}
+	else {
+		$dbh->do("insert into $table (name) values ('$name')");
+		$res = $dbh->selectall_arrayref(
+			"select id from $table where name = '$name'");
+		return $res->[0][0];
+	}
+}
+
+if ( not table_exists('lines') ) {
+	$dbh->do(
+		qq{
+		create table lines (
+			id serial primary key,
+			name text unique not null
+		)
+	}
+	);
+}
+if ( not table_exists('station_codes') ) {
+	$dbh->do(
+		qq{
+		create table station_codes (
+			id serial primary key,
+			name text unique not null
+		)
+	}
+	);
+}
+if ( not table_exists('stations') ) {
+	$dbh->do(
+		qq{
+		create table stations (
+			id serial primary key,
+			name text unique not null
+		)
+	}
+	);
+}
+if ( not table_exists('train_types') ) {
+	$dbh->do(
+		qq{
+		create table train_types (
+			id serial primary key,
+			name text unique not null
+		)
+	}
+	);
+}
+if ( not table_exists('departures') ) {
+	$dbh->do(
+		qq{
+		create table departures (
+			train_id bigint not null,
+			station integer not null references station_codes (id),
+			scheduled_time timestamp (0) not null,
+			delay smallint,
+			is_canceled boolean,
+			destination integer not null references stations (id),
+			train_type integer not null references train_types (id),
+			train_no integer not null,
+			line_no smallint references lines (id),
+			platform smallint,
+			primary key (train_id, scheduled_time)
+		)
+	}
+	);
+}
+for my $msg ( 1 .. 99 ) {
+	if ( not table_exists("msg_$msg") ) {
+		$dbh->do(
+			qq{create table msg_$msg (
+			train_id bigint not null,
+			scheduled_time timestamp (0) not null,
+			primary key (train_id, scheduled_time)
+		)}
+		);
+	}
+}
+
+my @fields = (
+	qw(train_id station scheduled_time delay
+	  is_canceled destination train_type train_no line_no platform)
+);
+my $fieldlist          = join( ', ', @fields );
+my $field_placeholders = '?, ?, to_timestamp(?), ?, ?, ?, ?, ?, ?, ?';
+my $insert_query       = qq{
+	insert into departures ( $fieldlist ) values ( $field_placeholders )
+};
+my $update_query = qq{
+	update departures set ( $fieldlist ) = ( $field_placeholders )
+	where train_id = ? and scheduled_time = to_timestamp(?)
+};
+my $sth = $dbh->prepare($insert_query);
+my $uth = $dbh->prepare($update_query);
+
+my @msg_sth;
+for my $msg ( 1 .. 99 ) {
+	$msg_sth[$msg] = $dbh->prepare(
+		qq{insert into msg_$msg
+		( train_id, scheduled_time ) values ( ?, to_timestamp(?) ) }
+	);
+}
+
+my $total
+  = $old_dbh->selectall_arrayref('select count(*) from departures')->[0][0];
+my $i = 0;
+
+for my $row ( @{ $old_dbh->selectall_arrayref('select * from departures') } ) {
+
+	my (
+		$train_id, $station,      $raw_id,      $scheduled_time,
+		$delay,    $is_cancelled, $destination, $train_type,
+		$train_no, $line_no,      $platform
+	) = @{$row};
+
+	if ( ( $i++ % 20 ) == 0 ) {
+		say "$i / $total";
+	}
+
+	my $station_id = get_id( 'station_codes', $station );
+
+	my $destination_id = get_id( 'stations',    $destination );
+	my $type_id        = get_id( 'train_types', $train_type );
+	my $line_id        = get_id( 'lines',       $line_no );
+	my $sched_platform = int_or_undef($platform);
+
+	if ( table_has_departure( 'departures', $train_id, $scheduled_time ) ) {
+
+		#$uth->execute(
+		#	$train_id,    $station_id,      $scheduled_time,
+		#	$delay,       $is_cancelled, $destination_id,
+		#	$type_id,        $train_no,     $line_id,
+		#	$sched_platform, $train_id,     $scheduled_time
+		#);
+	}
+	else {
+		$sth->execute(
+			$train_id, $station_id,   $scheduled_time,
+			$delay,    $is_cancelled, $destination_id,
+			$type_id,  $train_no,     $line_id,
+			$sched_platform
+		);
+	}
+}
+
+for my $msg ( 1 .. 99 ) {
+	say "msg $msg / 99";
+	for my $row ( @{ $old_dbh->selectall_arrayref("select * from msg_$msg") } )
+	{
+		if ( not table_has_departure( "msg_$msg", @{$row} ) ) {
+			$msg_sth[$msg]->execute( @{$row} );
+		}
+	}
+}
+
+__END__
+
+=head1 NAME
+
+=head1 SYNOPSIS
+
+=head1 VERSION
+
+=head1 DESCRIPTION
+
+=head1 OPTIONS
+
+=over
+
+=back
+
+=head1 EXIT STATUS
+
+=head1 CONFIGURATION
+
+None.
+
+=head1 DEPENDENCIES
+
+=over
+
+=back
+
+=head1 BUGS AND LIMITATIONS
+
+=head1 AUTHOR
+
+Copyright (C) 2015 by Daniel Friesel E<lt>derf@finalrewind.orgE<gt>
+
+=head1 LICENSE
+
+  0. You just DO WHAT THE FUCK YOU WANT TO.
