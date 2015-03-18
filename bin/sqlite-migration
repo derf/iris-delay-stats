@@ -226,7 +226,7 @@ for my $row ( @{ $old_dbh->selectall_arrayref('select * from departures') } ) {
 print "\n";
 $timer->restart(
 	min => 1,
-	max => $total,
+	max => 99,
 );
 for my $msg ( 1 .. 99 ) {
 	print $timer->report( "\r\e[2Kmsg table : %40b  ETR %E", $msg );
