@@ -7,7 +7,11 @@ use 5.010;
 use DBI;
 use Encode qw(decode);
 use List::Util qw(first);
+use IO::Handle;
 use Travel::Status::DE::IRIS;
+use Time::Progress;
+
+STDOUT->autoflush(1);
 
 our $VERSION = '0.00';
 
@@ -168,8 +172,14 @@ for my $msg ( 1 .. 99 ) {
 
 my $total
   = $old_dbh->selectall_arrayref('select count(*) from departures')->[0][0];
-my $i = 0;
 
+my $timer = Time::Progress->new;
+$timer->attr(
+	min => 1,
+	max => $total,
+);
+
+my $i = 0;
 for my $row ( @{ $old_dbh->selectall_arrayref('select * from departures') } ) {
 
 	my (
@@ -178,8 +188,10 @@ for my $row ( @{ $old_dbh->selectall_arrayref('select * from departures') } ) {
 		$train_no, $line_no,      $platform
 	) = @{$row};
 
-	if ( ( $i++ % 20 ) == 0 ) {
-		say "$i / $total";
+	if ( ( ++$i % 20 ) == 0 ) {
+		print $timer->report(
+			"\r\e[2Kmain table: %40b  ETR %E", $i
+		);
 	}
 
 	my $station_id = get_id( 'station_codes', $station );
@@ -208,8 +220,14 @@ for my $row ( @{ $old_dbh->selectall_arrayref('select * from departures') } ) {
 	}
 }
 
+$timer->restart(
+	min => 1,
+	max => $total,
+);
 for my $msg ( 1 .. 99 ) {
-	say "msg $msg / 99";
+	print $timer->report(
+		"\r\e[2Kmsg table : %40b  ETR %E", $msg
+	);
 	for my $row ( @{ $old_dbh->selectall_arrayref("select * from msg_$msg") } )
 	{
 		if ( not table_has_departure( "msg_$msg", @{$row} ) ) {
