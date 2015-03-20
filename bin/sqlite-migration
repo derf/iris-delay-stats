@@ -124,7 +124,7 @@ if ( not table_exists('departures') ) {
 		create table departures (
 			train_id bigint not null,
 			station integer not null references station_codes (id),
-			scheduled_time timestamp (0) not null,
+			scheduled_time timestamp (0) with time zone not null,
 			delay smallint,
 			is_canceled boolean,
 			destination integer not null references stations (id),
