@@ -629,7 +629,7 @@ app->config(
 	hypnotoad => {
 		accepts  => 10,
 		listen   => ['http://*:8093'],
-		pid_file => '/tmp/db-fake.pid',
+		pid_file => '/tmp/dbdb.pid',
 		workers  => $ENV{DBDB_WORKERS} // 2,
 	},
 );
