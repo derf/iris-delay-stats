@@ -10,42 +10,134 @@ use Travel::Status::DE::IRIS;
 
 our $VERSION = '0.00';
 
-my $station = shift or die("Usage: $0 <station> <database>\n");
-my $dbname  = shift or die("Usage: $0 <station> <database>\n");
+my $station = shift or die("Usage: $0 <station> [database]\n");
+my $dbname = shift // 'dbdb';
 
-my $first_run = not -e $dbname;
+my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=localhost;port=5432",
+	'dbdb', $ENV{DBDB_PASSWORD} );
 
-my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbname", q{}, q{} );
+sub int_or_undef {
+	my ($val) = @_;
 
-if ($first_run) {
-	my $query = qq{
+	if ( defined $val and length($val) and int($val) != 0 ) {
+		return int($val);
+	}
+	return undef;
+}
+
+sub table_exists {
+	my ($table_name) = @_;
+	my $sth = $dbh->table_info( undef, 'public', $table_name, 'TABLE' );
+
+	$sth->execute;
+	my @info = $sth->fetchrow_array;
+
+	my $exists = scalar @info;
+	return $exists;
+}
+
+sub table_has_departure {
+	my ( $table, $train_id, $scheduled_time ) = @_;
+	my $res
+	  = $dbh->selectall_arrayref(
+"select count(*) from $table where train_id = $train_id and scheduled_time = to_timestamp($scheduled_time)"
+	  )->[0][0];
+
+	if ( $res > 0 ) {
+		return 1;
+	}
+	return 0;
+}
+
+sub get_id {
+	my ( $table, $name ) = @_;
+
+	if (not defined $name) {
+		return undef;
+	}
+
+	my $res
+	  = $dbh->selectall_arrayref("select id from $table where name = '$name'");
+	if ( @{$res} ) {
+		return $res->[0][0];
+	}
+	else {
+		$dbh->do("insert into $table (name) values ('$name')");
+		$res = $dbh->selectall_arrayref(
+			"select id from $table where name = '$name'");
+		return $res->[0][0];
+	}
+}
+
+if ( not table_exists('lines') ) {
+	$dbh->do(
+		qq{
+		create table lines (
+			id serial primary key,
+			name text unique not null
+		)
+	}
+	);
+}
+if ( not table_exists('station_codes') ) {
+	$dbh->do(
+		qq{
+		create table station_codes (
+			id serial primary key,
+			name text unique not null
+		)
+	}
+	);
+}
+if ( not table_exists('stations') ) {
+	$dbh->do(
+		qq{
+		create table stations (
+			id serial primary key,
+			name text unique not null
+		)
+	}
+	);
+}
+if ( not table_exists('train_types') ) {
+	$dbh->do(
+		qq{
+		create table train_types (
+			id serial primary key,
+			name text unique not null
+		)
+	}
+	);
+}
+if ( not table_exists('departures') ) {
+	$dbh->do(
+		qq{
 		create table departures (
-			train_id int not null,
-			station char(10) not null,
-			raw_id char(64) not null unique,
-			scheduled_time int not null,
-			delay int,
+			train_id bigint not null,
+			station integer not null references station_codes (id),
+			scheduled_time timestamp (0) with time zone not null,
+			delay smallint,
 			is_canceled boolean,
-			destination char(64) not null,
-			train_type char(6) not null,
-			train_no int not null,
-			line_no int,
-			platform char(16),
+			destination integer not null references stations (id),
+			train_type integer not null references train_types (id),
+			train_no integer not null,
+			line_no smallint references lines (id),
+			platform smallint,
 			primary key (train_id, scheduled_time)
 		)
-	};
-	$dbh->do($query);
-	for my $msg ( 1 .. 99 ) {
+	}
+	);
+}
+for my $msg ( 1 .. 99 ) {
+	if ( not table_exists("msg_$msg") ) {
 		$dbh->do(
 			qq{create table msg_$msg (
-			train_id int not null,
-			scheduled_time int not null,
+			train_id bigint not null,
+			scheduled_time timestamp (0) not null,
 			primary key (train_id, scheduled_time)
 		)}
 		);
 	}
-	$dbh->do(qq{create view public_departures as
-		select * from departures where station == 'EDUV'});
 }
 
 my $status = Travel::Status::DE::IRIS->new(
@@ -54,23 +146,30 @@ my $status = Travel::Status::DE::IRIS->new(
 );
 
 my @fields = (
-	qw(train_id station raw_id scheduled_time delay
+	qw(train_id station scheduled_time delay
 	  is_canceled destination train_type train_no line_no platform)
 );
-my $fieldlist = join( ', ', @fields );
-my $field_placeholders = join( ', ', ('?') x @fields );
-my $insert_query = qq{
-	insert or replace into departures ( $fieldlist ) values ( $field_placeholders )
+my $fieldlist          = join( ', ', @fields );
+my $field_placeholders = '?, ?, to_timestamp(?), ?, ?, ?, ?, ?, ?, ?';
+my $insert_query       = qq{
+	insert into departures ( $fieldlist ) values ( $field_placeholders )
+};
+my $update_query = qq{
+	update departures set ( $fieldlist ) = ( $field_placeholders )
+	where train_id = ? and scheduled_time = to_timestamp(?)
 };
 my $sth = $dbh->prepare($insert_query);
+my $uth = $dbh->prepare($update_query);
 
 my @msg_sth;
 for my $msg ( 1 .. 99 ) {
 	$msg_sth[$msg] = $dbh->prepare(
-		qq{insert or replace into msg_$msg
-		( train_id, scheduled_time ) values ( ?, ? ) }
+		qq{insert into msg_$msg
+		( train_id, scheduled_time ) values ( ?, to_timestamp(?) ) }
 	);
 }
+
+my $station_id = get_id( 'station_codes', $station );
 
 for my $r ( $status->results ) {
 
@@ -79,15 +178,38 @@ for my $r ( $status->results ) {
 		$msgtypes[ $m->[1] ] = 1;
 	}
 
-	$sth->execute(
-		$r->train_id,        $station,  $r->raw_id,
-		$r->datetime->epoch, $r->delay, $r->is_cancelled,
-		$r->destination,     $r->type,  $r->train_no,
-		$r->line_no,         $r->sched_platform
-	);
+	my $destination_id = get_id( 'stations',    $r->destination );
+	my $type_id        = get_id( 'train_types', $r->type );
+	my $line_id        = get_id( 'lines', $r->line_no );
+	my $sched_platform = int_or_undef( $r->sched_platform );
+
+	if (
+		table_has_departure( 'departures', $r->train_id, $r->datetime->epoch ) )
+	{
+		$uth->execute(
+			$r->train_id,    $station_id,      $r->datetime->epoch,
+			$r->delay,       $r->is_cancelled, $destination_id,
+			$type_id,        $r->train_no,     $line_id,
+			$sched_platform, $r->train_id,     $r->datetime->epoch
+		);
+	}
+	else {
+		$sth->execute(
+			$r->train_id, $station_id,      $r->datetime->epoch,
+			$r->delay,    $r->is_cancelled, $destination_id,
+			$type_id,     $r->train_no,     $line_id,
+			$sched_platform
+		);
+	}
 
 	for my $msg ( 1 .. 99 ) {
-		if ( $msgtypes[$msg] ) {
+		if (
+			$msgtypes[$msg]
+			and not table_has_departure(
+				"msg_$msg", $r->train_id, $r->datetime->epoch
+			)
+		  )
+		{
 			$msg_sth[$msg]->execute( $r->train_id, $r->datetime->epoch );
 		}
 	}
