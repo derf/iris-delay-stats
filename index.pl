@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite;
 use DBI;
-use Encode qw(decode);
+use Encode qw(decode encode);
 use Travel::Status::DE::IRIS;
 use Travel::Status::DE::IRIS::Stations;
 use 5.014;
@@ -11,16 +11,16 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 
 our $VERSION = qx{git describe --dirty} || '0.01';
 
-my $table = $ENV{DBDB_TABLE} // 'departures';
-
 app->defaults( layout => 'default' );
 
 app->attr(
 	dbh => sub {
 		my $self = shift;
 
-		my $dbname = $ENV{DBDB_FILE} // 'iris.sqlite';
-		my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbname", q{}, q{} );
+		my $dbname = 'dbdb';
+		my $dbh
+		  = DBI->connect( "dbi:Pg:dbname=$dbname;host=localhost;port=5432",
+			'dbdb', $ENV{DBDB_PASSWORD}, { RaiseError => 1 } );
 
 		return $dbh;
 	}
@@ -98,17 +98,27 @@ helper barplot_filters => sub {
 
 	my $ret = {
 		lines => [
-			map { [ $_->[0], $_->[0] ] } @{
+			q{},
+			map { [ $_->[2] . ' ' . $_->[3], $_->[0] . '.' . $_->[1] ] } @{
 				$dbh->selectall_arrayref(
-"select distinct train_type || ' ' || line_no as line from $table order by line"
+					qq{
+					select distinct train_type, line_no, train_types.name,
+					lines.name from departures
+					join train_types on train_type = train_types.id
+					join lines on line_no = lines.id
+					where line_no is not null
+					order by train_types.name, lines.name
+				}
 				)
 			}
 		],
 		train_types => [
 			q{},
-			map { [ $_->[0], $_->[0] ] } @{
+			map { [ $_->[0], $_->[1] ] } @{
 				$dbh->selectall_arrayref(
-					"select distinct train_type from $table order by train_type"
+					qq{
+					select name, id from train_types order by name
+				}
 				)
 			}
 		],
@@ -118,18 +128,23 @@ helper barplot_filters => sub {
 				[
 					Travel::Status::DE::IRIS::Stations::get_station( $_->[0] )
 					  ->[1],
-					$_->[0]
+					$_->[1]
 				]
 			  } @{
 				$dbh->selectall_arrayref(
-					"select distinct station from $table order by station")
+					qq{
+					select name, id from station_codes order by name
+				}
+				)
 			  }
 		],
 		destinations => [
 			q{},
-			map { [ decode( 'utf8', $_->[0] ), decode( 'utf8', $_->[0] ) ] } @{
+			map { [ $_->[0], $_->[1] ] } @{
 				$dbh->selectall_arrayref(
-"select distinct destination from $table order by destination"
+					qq{
+					select name, id from stations order by name
+				}
 				)
 			}
 		],
@@ -144,11 +159,12 @@ helper count_unique_column => sub {
 
 	if ( not $column ) {
 		return
-		  scalar $dbh->selectall_arrayref("select count() from $table")->[0][0];
+		  scalar $dbh->selectall_arrayref('select count(*) from departures')
+		  ->[0][0];
 	}
 	return
 	  scalar $dbh->selectall_arrayref(
-		"select count(distinct $column) from $table")->[0][0];
+		"select count(distinct $column) from departures")->[0][0];
 };
 
 helper single_query => sub {
@@ -164,7 +180,7 @@ helper globalstats => sub {
 	my $stations = [
 		map { Travel::Status::DE::IRIS::Stations::get_station($_)->[1] } @{
 			$self->app->dbh->selectcol_arrayref(
-				"select distinct station from $table")
+				"select name from station_codes")
 		}
 	];
 
@@ -173,24 +189,25 @@ helper globalstats => sub {
 		stationlist => $stations,
 		stations    => $self->count_unique_column('station'),
 		realtime    => $self->single_query(
-			"select count() from $table where delay is not null"),
-		realtime_rate =>
-		  $self->single_query("select avg(delay is not null) from $table"),
-		ontime =>
-		  $self->single_query("select count() from $table where delay < 1"),
-		ontime_rate => $self->single_query("select avg(delay < 1) from $table"),
-		days        => $self->count_unique_column(
-			'strftime("%Y%m%d", scheduled_time, "unixepoch")'),
-		delayed =>
-		  $self->single_query("select count() from $table where delay > 5"),
+			"select count(*) from departures where delay is not null"),
+		realtime_rate => $self->single_query(
+			"select avg((delay is not null)::int) from departures"),
+		ontime => $self->single_query(
+			"select count(*) from departures where delay < 1"),
+		ontime_rate =>
+		  $self->single_query("select avg((delay < 1)::int) from departures"),
+		days => $self->count_unique_column(
+			'(scheduled_time at time zone \'GMT\')::date'),
+		delayed => $self->single_query(
+			"select count(*) from departures where delay > 5"),
 		delayed_rate =>
-		  $self->single_query("select avg(delay > 5) from $table"),
+		  $self->single_query("select avg((delay > 5)::int) from departures"),
 		canceled => $self->single_query(
-			"select count() from $table where is_canceled > 0"),
+			"select count(*) from departures where is_canceled"),
 		canceled_rate =>
-		  $self->single_query("select avg(is_canceled > 0) from $table"),
-		delay_sum => $self->single_query("select sum(delay) from $table"),
-		delay_avg => $self->single_query("select avg(delay) from $table"),
+		  $self->single_query("select avg(is_canceled::int) from departures"),
+		delay_sum => $self->single_query("select sum(delay) from departures"),
+		delay_avg => $self->single_query("select avg(delay) from departures"),
 	};
 
 	return $ret;
@@ -210,7 +227,7 @@ helper parse_filter_args => sub {
 	);
 
 	for my $key ( keys %filter ) {
-		$filter{$key} =~ tr{a-zA-Z0-9öäüÖÄÜß }{}cd;
+		$filter{$key} =~ tr{.a-zA-Z0-9öäüÖÄÜß }{}cd;
 	}
 
 	$filter{delay_min}
@@ -219,9 +236,8 @@ helper parse_filter_args => sub {
 	  = length( $filter{delay_max} ) ? int( $filter{delay_max} ) : undef;
 
 	if ( $filter{line} ) {
-		my ( $train_type, $line_no ) = split( / /, $filter{line} );
-		$where_clause
-		  .= " and train_type = '$train_type' and line_no = '$line_no'";
+		my ( $train_type, $line_no ) = split( /\./, $filter{line} );
+		$where_clause .= " and train_type = $train_type and line_no = $line_no";
 	}
 	if ( $filter{train_type} ) {
 		$where_clause .= " and train_type = '$filter{train_type}'";
@@ -242,6 +258,27 @@ helper parse_filter_args => sub {
 	return ( \%filter, $where_clause );
 };
 
+helper translate_filter_arg => sub {
+	my ( $self, $argtype, @args ) = @_;
+	if ( $argtype eq 'line' ) {
+		return $self->single_query(
+			qq{
+			select train_types.name || ' ' || lines.name
+			from train_types, lines
+			where train_types.id = $args[0]
+			and lines.id = $args[1]
+		}
+		);
+	}
+	return $self->single_query(
+		qq{
+		select name
+		from ${argtype}s
+		where id = $args[0]
+	}
+	);
+};
+
 get '/by_hour.json' => sub {
 	my $self = shift;
 
@@ -249,8 +286,8 @@ get '/by_hour.json' => sub {
 
 	my $res = $self->app->dbh->selectall_arrayref(
 		qq{
-		select strftime("%H", scheduled_time, "unixepoch") as time,
-		avg(delay) as date from $table group by time}
+		select extract(hour from scheduled_time at time zone \'GMT\') as time,
+		avg(delay) as date from departures group by time}
 	);
 
 	for my $row ( @{$res} ) {
@@ -282,28 +319,34 @@ get '/2ddata.tsv' => sub {
 	}
 
 	my $where_clause = '1 = 1';
+	my $join_clause  = q{};
 
 	my $res = "x\ty\ty_total\ty_matched\n";
 
 	my $query;
-	my $format = 'strftime("%H", scheduled_time, "unixepoch")';
+	my $format = 'extract(hour from scheduled_time at time zone \'GMT\')';
 
 	given ($aggregate) {
 		when ('weekday') {
-			$format = 'strftime("%w", scheduled_time, "unixepoch")';
+			$format = 'extract(dow from scheduled_time at time zone \'GMT\')';
 		}
 		when ('weekhour') {
-			$format = 'strftime("%w%H", scheduled_time, "unixepoch")';
+			$format
+			  = 'extract(dow from scheduled_time at time zone \'GMT\') || \' \' || to_char(scheduled_time at time zone \'GMT\', \'HH24\')';
 		}
 		when ('line') {
-			$format       = 'train_type || " " || line_no';
+			$format       = 'train_types.name || \' \' || lines.name';
 			$where_clause = 'line_no is not null';
+			$join_clause  = 'join train_types on train_type = train_types.id '
+			  . 'join lines on line_no = lines.id';
 		}
 		when ('station') {
-			$format = 'station';
+			$format      = 'station_codes.name';
+			$join_clause = 'join station_codes on station = station_codes.id';
 		}
 		when ('train_type') {
-			$format = 'train_type';
+			$format      = 'train_types.name';
+			$join_clause = 'join train_types on train_type = train_types.id';
 		}
 	}
 
@@ -313,52 +356,78 @@ get '/2ddata.tsv' => sub {
 		when ('avg_delay') {
 			$query = qq{
 				select $format as aggregate, avg(delay), count(delay)
-				from $table where not is_canceled and $where_clause group by aggregate
+				from departures
+				$join_clause
+				where not is_canceled and $where_clause
+				group by aggregate
+				order by aggregate
 			};
 		}
 		when ('cancel_num') {
 			$query = qq{
-				select $format as aggregate, count(), count()
-				from $table where is_canceled > 0 and $where_clause group by aggregate
+				select $format as aggregate, count(*), count(*)
+				from departures
+				$join_clause
+				where is_canceled and $where_clause
+				group by aggregate
+				order by aggregate
 			};
 		}
 		when ('cancel_rate') {
 			$query = qq{
-				select $format as aggregate, avg(is_canceled), count(is_canceled),
-					sum(is_canceled = 1)
-				from $table where $where_clause group by aggregate
+				select $format as aggregate, avg(is_canceled::int), count(is_canceled),
+					sum(is_canceled::int)
+				from departures
+				$join_clause
+				where $where_clause
+				group by aggregate
+				order by aggregate
 			};
 		}
 		when ('delay0_rate') {
 			$query = qq{
-				select $format as aggregate, avg(delay < 1), count(delay),
-					sum(delay < 1)
-				from $table where $where_clause group by aggregate
+				select $format as aggregate, avg((delay < 1)::int), count(delay),
+					sum((delay < 1)::int)
+				from departures
+				$join_clause
+				where $where_clause
+				group by aggregate
+				order by aggregate
 			};
 		}
 		when ('delay5_rate') {
 			$query = qq{
-				select $format as aggregate, avg(delay > 5), count(delay),
-					sum(delay > 5)
-				from $table where $where_clause group by aggregate
+				select $format as aggregate, avg((delay > 5)::int), count(delay),
+					sum((delay > 5)::int)
+				from departures
+				$join_clause
+				where $where_clause
+				group by aggregate
+				order by aggregate
 			};
 		}
 		when ('message_rate') {
 			$query = qq{
 				select $format as aggregate,
-				avg(msgtable.train_id is not null), count(),
-				sum(msgtable.train_id is not null)
-				from $table
+				avg((msgtable.train_id is not null)::int), count(*),
+				sum((msgtable.train_id is not null)::int)
+				from departures
+				$join_clause
 				left outer join msg_$msgnum as msgtable using
-				(scheduled_time, train_id) where $where_clause group by aggregate
+				(scheduled_time, train_id) where $where_clause
+				group by aggregate
+				order by aggregate
 			};
 		}
 		when ('realtime_rate') {
 			$query = qq{
-				select $format as aggregate, avg(delay is not null),
-					count(), sum(delay is not null)
-				from $table
-				where $where_clause group by aggregate
+				select $format as aggregate, avg((delay is not null)::int),
+					count(*), sum((delay is not null)::int)
+				from departures
+				$join_clause
+				where $where_clause
+				group by aggregate
+				order by aggregate
 			};
 		}
 	}
@@ -378,6 +447,13 @@ get '/2ddata.tsv' => sub {
 				  . substr( $row->[0], 1 ) );
 		}
 		@{$dbres} = ( @{$dbres}[ 1 * 24 .. 7 * 24 - 1 ], @{$dbres}[ 0 .. 23 ] );
+	}
+	elsif ( $aggregate eq 'station' ) {
+		for my $row ( @{$dbres} ) {
+			$row->[0] = encode( 'utf-8',
+				Travel::Status::DE::IRIS::Stations::get_station( $row->[0] )
+				  ->[1] );
+		}
 	}
 
 	for my $row ( @{$dbres} ) {
@@ -401,7 +477,7 @@ get '/all' => sub {
 
 	my $num_departures = $dbh->selectall_arrayref(
 		qq{
-		select count() from $table}
+		select count(*) from departures}
 	)->[0][0];
 
 	$self->render(
@@ -438,24 +514,38 @@ get '/bar' => sub {
 	}
 
 	if ( $self->param('filter_line') ) {
-		push( @title_filter_strings, 'Linie ' . $self->param('filter_line') );
+		my @translate_args = split( /\./, $self->param('filter_line') );
+		push( @title_filter_strings,
+			'Linie ' . $self->translate_filter_arg( 'line', @translate_args ) );
 	}
 	if ( $self->param('filter_train_type') ) {
-		push( @title_filter_strings,
-			'Zugtyp ' . $self->param('filter_train_type') );
+		push(
+			@title_filter_strings,
+			'Zugtyp '
+			  . $self->translate_filter_arg(
+				'train_type', $self->param('filter_train_type')
+			  )
+		);
 	}
 	if ( $self->param('filter_station') ) {
 		push(
 			@title_filter_strings,
 			'in '
 			  . Travel::Status::DE::IRIS::Stations::get_station(
-				$self->param('filter_station')
+				$self->translate_filter_arg(
+					'station_code', $self->param('filter_station')
+				)
 			  )->[1]
 		);
 	}
 	if ( $self->param('filter_destination') ) {
-		push( @title_filter_strings,
-			'Züge nach ' . $self->param('filter_destination') );
+		push(
+			@title_filter_strings,
+			'Züge nach '
+			  . $self->translate_filter_arg(
+				'station', $self->param('filter_destination')
+			  )
+		);
 	}
 	if (@title_filter_strings) {
 		$title .= ' (' . join( ', ', @title_filter_strings ) . ')';
@@ -499,12 +589,12 @@ get '/top' => sub {
 	$where_clause .= $filter_clause;
 
 	my $total = $dbh->selectall_arrayref(
-		"select count() from $table where $where_clause")->[0][0];
+		"select count(*) from departures where $where_clause")->[0][0];
 
 	for my $msgnum ( 1 .. 99 ) {
 		my $query = qq{
-			select count()
-			from $table
+			select count(*)
+			from departures
 			join msg_$msgnum as msgtable using
 			(scheduled_time, train_id) where $where_clause
 		};
