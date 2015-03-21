@@ -321,7 +321,7 @@ get '/2ddata.tsv' => sub {
 	my $where_clause = '1 = 1';
 	my $join_clause  = q{};
 
-	my $res = "x\ty\ty_total\ty_matched\n";
+	my $res = "x\ty\ty_total\ty_stddev\ty_matched\n";
 
 	my $query;
 	my $format = 'extract(hour from scheduled_time at time zone \'GMT\')';
@@ -355,7 +355,8 @@ get '/2ddata.tsv' => sub {
 	given ($metric) {
 		when ('avg_delay') {
 			$query = qq{
-				select $format as aggregate, avg(delay), count(delay)
+				select $format as aggregate, avg(delay), count(delay),
+				stddev_samp(delay)
 				from departures
 				$join_clause
 				where not is_canceled and $where_clause
@@ -376,7 +377,7 @@ get '/2ddata.tsv' => sub {
 		when ('cancel_rate') {
 			$query = qq{
 				select $format as aggregate, avg(is_canceled::int), count(is_canceled),
-					sum(is_canceled::int)
+					stddev_samp(is_canceled::int), sum(is_canceled::int)
 				from departures
 				$join_clause
 				where $where_clause
@@ -387,7 +388,7 @@ get '/2ddata.tsv' => sub {
 		when ('delay0_rate') {
 			$query = qq{
 				select $format as aggregate, avg((delay < 1)::int), count(delay),
-					sum((delay < 1)::int)
+					stddev_samp((delay < 1)::int), sum((delay < 1)::int)
 				from departures
 				$join_clause
 				where $where_clause
@@ -398,7 +399,7 @@ get '/2ddata.tsv' => sub {
 		when ('delay5_rate') {
 			$query = qq{
 				select $format as aggregate, avg((delay > 5)::int), count(delay),
-					sum((delay > 5)::int)
+					stddev_samp((delay < 1)::int), sum((delay > 5)::int)
 				from departures
 				$join_clause
 				where $where_clause
@@ -410,6 +411,7 @@ get '/2ddata.tsv' => sub {
 			$query = qq{
 				select $format as aggregate,
 				avg((msgtable.train_id is not null)::int), count(*),
+				stddev_samp((msgtable.train_id is not null)::int),
 				sum((msgtable.train_id is not null)::int)
 				from departures
 				$join_clause
@@ -422,6 +424,7 @@ get '/2ddata.tsv' => sub {
 		when ('realtime_rate') {
 			$query = qq{
 				select $format as aggregate, avg((delay is not null)::int),
+					stddev_samp((delay is not null)::int),
 					count(*), sum((delay is not null)::int)
 				from departures
 				$join_clause
