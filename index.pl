@@ -424,8 +424,9 @@ get '/2ddata.tsv' => sub {
 		when ('realtime_rate') {
 			$query = qq{
 				select $format as aggregate, avg((delay is not null)::int),
+					count(*),
 					stddev_samp((delay is not null)::int),
-					count(*), sum((delay is not null)::int)
+					sum((delay is not null)::int)
 				from departures
 				$join_clause
 				where $where_clause
