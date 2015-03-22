@@ -441,14 +441,44 @@ get '/2ddata.tsv' => sub {
 		for my $row ( @{$dbres} ) {
 			splice( @{$row}, 0, 1, $weekdays[ $row->[0] ] );
 		}
+
+		# SQL starts on sunday, we'd like to start on monday
 		@{$dbres} = ( @{$dbres}[ 1 .. 6 ], $dbres->[0] );
 	}
 	elsif ( $aggregate eq 'weekhour' ) {
+
+		# the result only contains columns for datetimes with departures, so
+		# it may have less than 24 * 7 elements. However, we'd like to
+		# return a 0 for 'missing' times, so we rebuild the reply here.
+		my $newres;
+		my $row_index = 0;
+
+		for my $weekday ( 0 .. 6 ) {
+			for my $hour ( 0 .. 23 ) {
+				my ( $row_weekday, $row_hour )
+				  = split( / /, $dbres->[$row_index][0] );
+				if ( $weekday == $row_weekday and $hour == $row_hour ) {
+					$newres->[ $weekday * 24 + $hour ] = $dbres->[$row_index];
+					$row_index++;
+				}
+				else {
+					$newres->[ $weekday * 24 + $hour ]
+					  = [ "$weekday $hour", 0, 0, 0, 0, 0 ];
+				}
+			}
+		}
+		$dbres = $newres;
+
 		for my $row ( @{$dbres} ) {
+			say $row->[0];
 			splice( @{$row}, 0, 1,
 				$weekdays[ substr( $row->[0], 0, 1 ) ] . q{ }
-				  . substr( $row->[0], 1 ) );
+				  . substr( $row->[0], 2 ) );
+			say $row->[0];
 		}
+		say scalar @{$dbres};
+
+		# Fix weekday ordering (start on Monday, not Sunday)
 		@{$dbres} = ( @{$dbres}[ 1 * 24 .. 7 * 24 - 1 ], @{$dbres}[ 0 .. 23 ] );
 	}
 	elsif ( $aggregate eq 'station' ) {
@@ -460,7 +490,9 @@ get '/2ddata.tsv' => sub {
 	}
 
 	for my $row ( @{$dbres} ) {
-		$res .= join( "\t", @{$row} ) . "\n";
+		if ( $row and @{$row} ) {
+			$res .= join( "\t", @{$row} ) . "\n";
+		}
 	}
 
 	$self->render( data => $res );
