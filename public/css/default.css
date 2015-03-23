@@ -65,6 +65,11 @@ arc path {
   fill: orange;
 }
 
+.stddev {
+	stroke: #000;
+	shape-rendering: crispEdges;
+}
+
 .bar:hover {
   fill: orangered ;
 }

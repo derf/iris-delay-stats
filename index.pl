@@ -321,7 +321,7 @@ get '/2ddata.tsv' => sub {
 	my $where_clause = '1 = 1';
 	my $join_clause  = q{};
 
-	my $res = "x\ty\ty_total\ty_stddev\ty_matched\n";
+	my $res;
 
 	my $query;
 	my $format = 'extract(hour from scheduled_time at time zone \'GMT\')';
@@ -354,6 +354,7 @@ get '/2ddata.tsv' => sub {
 
 	given ($metric) {
 		when ('avg_delay') {
+			$res   = "x\ty\ty_total\ty_stddev\n";
 			$query = qq{
 				select $format as aggregate, avg(delay), count(delay),
 				stddev_samp(delay)
@@ -365,6 +366,7 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('cancel_num') {
+			$res   = "x\ty\ty_total\n";
 			$query = qq{
 				select $format as aggregate, count(*), count(*)
 				from departures
@@ -375,9 +377,10 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('cancel_rate') {
+			$res   = "x\ty\ty_total\ty_matched\n";
 			$query = qq{
 				select $format as aggregate, avg(is_canceled::int), count(is_canceled),
-					stddev_samp(is_canceled::int), sum(is_canceled::int)
+					sum(is_canceled::int)
 				from departures
 				$join_clause
 				where $where_clause
@@ -386,9 +389,10 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('delay0_rate') {
+			$res   = "x\ty\ty_total\ty_matched\n";
 			$query = qq{
 				select $format as aggregate, avg((delay < 1)::int), count(delay),
-					stddev_samp((delay < 1)::int), sum((delay < 1)::int)
+					sum((delay < 1)::int)
 				from departures
 				$join_clause
 				where $where_clause
@@ -397,9 +401,10 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('delay5_rate') {
+			$res   = "x\ty\ty_total\ty_matched\n";
 			$query = qq{
 				select $format as aggregate, avg((delay > 5)::int), count(delay),
-					stddev_samp((delay < 1)::int), sum((delay > 5)::int)
+					sum((delay > 5)::int)
 				from departures
 				$join_clause
 				where $where_clause
@@ -408,10 +413,10 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('message_rate') {
+			$res   = "x\ty\ty_total\ty_matched\n";
 			$query = qq{
 				select $format as aggregate,
 				avg((msgtable.train_id is not null)::int), count(*),
-				stddev_samp((msgtable.train_id is not null)::int),
 				sum((msgtable.train_id is not null)::int)
 				from departures
 				$join_clause
@@ -422,10 +427,10 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('realtime_rate') {
+			$res   = "x\ty\ty_total\ty_matched\n";
 			$query = qq{
 				select $format as aggregate, avg((delay is not null)::int),
 					count(*),
-					stddev_samp((delay is not null)::int),
 					sum((delay is not null)::int)
 				from departures
 				$join_clause

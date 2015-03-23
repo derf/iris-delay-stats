@@ -25,6 +25,8 @@ show_bargraph = function(datasource, title, xLabel, yLabel, yFormat, width, heig
       .scale(y)
       .orient("left");
 
+  var stddev_fact = 5;
+
   if (yFormat) {
       yAxis = yAxis.tickFormat(d3.format(yFormat));
   }
@@ -54,7 +56,7 @@ show_bargraph = function(datasource, title, xLabel, yLabel, yFormat, width, heig
     if (error) console.warn(error);
     x.domain(data.map(function(d) { return d.x; }));
     y.domain([0, d3.max(data, function(d) { return d.y; })]);
-  
+
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
@@ -93,6 +95,37 @@ show_bargraph = function(datasource, title, xLabel, yLabel, yFormat, width, heig
         .attr("height", function(d) { return height - y(d.y); })
         .on('mouseover', tip.show)
         .on('mouseout', tip.hide)
+
+     if (data[0].y_stddev !== undefined) {
+       svg.selectAll(".stddev")
+          .data(data)
+        .enter().append("line")
+          .attr("class", "stddev")
+          .attr("x1", function(d) { return x(d.x) + x.rangeBand() / 2; })
+          .attr("x2", function(d) { return x(d.x) + x.rangeBand() / 2; })
+          .attr("y1", function(d) { return y(d.y) - y(d.y_stddev); })
+          .attr("y2", function(d) { return y(d.y) + y(d.y_stddev); })
+          .attr("stroke-width", 1)
+       svg.selectAll(".placeholder")
+          .data(data)
+        .enter().append("line")
+          .attr("class", "stddev")
+          .attr("x1", function(d) { return x(d.x) + x.rangeBand() / 2 - 4; })
+          .attr("x2", function(d) { return x(d.x) + x.rangeBand() / 2 + 3; })
+          .attr("y1", function(d) { return y(d.y) - y(d.y_stddev); })
+          .attr("y2", function(d) { return y(d.y) - y(d.y_stddev); })
+          .attr("stroke-width", 1)
+       svg.selectAll(".placeholder")
+          .data(data)
+        .enter().append("line")
+          .attr("class", "stddev")
+          .attr("x1", function(d) { return x(d.x) + x.rangeBand() / 2 - 4; })
+          .attr("x2", function(d) { return x(d.x) + x.rangeBand() / 2 + 3; })
+          .attr("y1", function(d) { return y(d.y) + y(d.y_stddev); })
+          .attr("y2", function(d) { return y(d.y) + y(d.y_stddev); })
+          .attr("stroke-width", 1)
+      }
+
   
   });
   
