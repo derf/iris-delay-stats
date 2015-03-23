@@ -476,13 +476,10 @@ get '/2ddata.tsv' => sub {
 		$dbres = $newres;
 
 		for my $row ( @{$dbres} ) {
-			say $row->[0];
 			splice( @{$row}, 0, 1,
 				$weekdays[ substr( $row->[0], 0, 1 ) ] . q{ }
 				  . substr( $row->[0], 2 ) );
-			say $row->[0];
 		}
-		say scalar @{$dbres};
 
 		# Fix weekday ordering (start on Monday, not Sunday)
 		@{$dbres} = ( @{$dbres}[ 1 * 24 .. 7 * 24 - 1 ], @{$dbres}[ 0 .. 23 ] );
