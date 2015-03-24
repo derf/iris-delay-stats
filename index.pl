@@ -193,21 +193,21 @@ helper globalstats => sub {
 		realtime_rate => $self->single_query(
 			"select avg((delay is not null)::int) from departures"),
 		ontime => $self->single_query(
-			"select count(*) from departures where delay < 1"),
+			"select count(*) from departures where delay < 1 and not is_canceled"),
 		ontime_rate =>
-		  $self->single_query("select avg((delay < 1)::int) from departures"),
+		  $self->single_query("select avg((delay < 1 and not is_canceled)::int) from departures"),
 		days => $self->count_unique_column(
 			'(scheduled_time at time zone \'GMT\')::date'),
 		delayed => $self->single_query(
-			"select count(*) from departures where delay > 5"),
+			"select count(*) from departures where delay > 5 and not is_canceled"),
 		delayed_rate =>
-		  $self->single_query("select avg((delay > 5)::int) from departures"),
+		  $self->single_query("select avg((delay > 5 and not is_canceled)::int) from departures"),
 		canceled => $self->single_query(
 			"select count(*) from departures where is_canceled"),
 		canceled_rate =>
 		  $self->single_query("select avg(is_canceled::int) from departures"),
-		delay_sum => $self->single_query("select sum(delay) from departures"),
-		delay_avg => $self->single_query("select avg(delay) from departures"),
+		delay_sum => $self->single_query("select sum(delay) from departures where not is_canceled"),
+		delay_avg => $self->single_query("select avg(delay) from departures where not is_canceled"),
 	};
 
 	return $ret;
