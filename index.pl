@@ -140,7 +140,7 @@ helper barplot_filters => sub {
 		],
 		destinations => [
 			q{},
-			map { [ $_->[0], $_->[1] ] } @{
+			map { [ decode( 'utf-8', $_->[0] ), $_->[1] ] } @{
 				$dbh->selectall_arrayref(
 					qq{
 					select name, id from stations order by name
@@ -193,21 +193,25 @@ helper globalstats => sub {
 		realtime_rate => $self->single_query(
 			"select avg((delay is not null)::int) from departures"),
 		ontime => $self->single_query(
-			"select count(*) from departures where delay < 1 and not is_canceled"),
-		ontime_rate =>
-		  $self->single_query("select avg((delay < 1 and not is_canceled)::int) from departures"),
+"select count(*) from departures where delay < 1 and not is_canceled"
+		),
+		ontime_rate => $self->single_query(
+			"select avg((delay < 1 and not is_canceled)::int) from departures"),
 		days => $self->count_unique_column(
 			'(scheduled_time at time zone \'GMT\')::date'),
 		delayed => $self->single_query(
-			"select count(*) from departures where delay > 5 and not is_canceled"),
-		delayed_rate =>
-		  $self->single_query("select avg((delay > 5 and not is_canceled)::int) from departures"),
+"select count(*) from departures where delay > 5 and not is_canceled"
+		),
+		delayed_rate => $self->single_query(
+			"select avg((delay > 5 and not is_canceled)::int) from departures"),
 		canceled => $self->single_query(
 			"select count(*) from departures where is_canceled"),
 		canceled_rate =>
 		  $self->single_query("select avg(is_canceled::int) from departures"),
-		delay_sum => $self->single_query("select sum(delay) from departures where not is_canceled"),
-		delay_avg => $self->single_query("select avg(delay) from departures where not is_canceled"),
+		delay_sum => $self->single_query(
+			"select sum(delay) from departures where not is_canceled"),
+		delay_avg => $self->single_query(
+			"select avg(delay) from departures where not is_canceled"),
 	};
 
 	return $ret;
@@ -580,8 +584,11 @@ get '/bar' => sub {
 		push(
 			@title_filter_strings,
 			'Züge nach '
-			  . $self->translate_filter_arg(
-				'station', $self->param('filter_destination')
+			  . decode(
+				'utf-8',
+				$self->translate_filter_arg(
+					'station', $self->param('filter_destination')
+				)
 			  )
 		);
 	}
