@@ -1,51 +1,6 @@
 <div>
 %= form_for top => begin
-% my $filter_opts = $self->barplot_filters;
 Nach Häufigkeit sortierte Verspätungs- und Qualitätsmeldungen.
 Die Einschränkungen sind alle optional.
-<div class="field">
-  <div class="desc">
-    Linie:
-  </div>
-  <div>
-    %= select_field filter_line => $filter_opts->{lines}
-  </div>
-</div>
-<div class="field">
-  <div class="desc">
-    Zugtyp:
-  </div>
-  <div>
-    %= select_field filter_train_type => $filter_opts->{train_types}
-  </div>
-</div>
-<div class="field">
-  <div class="desc">
-    Bahnhof:
-  </div>
-  <div>
-    %= select_field filter_station => $filter_opts->{stations}
-  </div>
-</div>
-<div class="field">
-  <div class="desc">
-    Zielbahnhof:
-  </div>
-  <div>
-    %= select_field filter_destination => $filter_opts->{destinations}
-  </div>
-</div>
-<div class="field">
-  <div class="desc">
-    Verspätung zwischen
-  </div>
-  <div>
-    %= text_field 'filter_delay_min', class => 'delay', placeholder => '-∞'
-    und
-    %= text_field 'filter_delay_max', class => 'delay', placeholder => '+∞'
-    Minuten (inklusive).
-    %= submit_button 'Go'
-  </div>
-</div>
+%= include 'filterform';
 % end
-<div>
