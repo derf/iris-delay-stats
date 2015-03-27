@@ -25,8 +25,10 @@ sub int_or_undef {
 	return undef;
 }
 
+# TODO does not work with postgresql 9.4, does not support views
 sub table_exists {
 	my ($table_name) = @_;
+	return 1;
 	my $sth = $dbh->table_info( undef, 'public', $table_name, 'TABLE' );
 
 	$sth->execute;
@@ -52,7 +54,7 @@ sub table_has_departure {
 sub get_id {
 	my ( $table, $name ) = @_;
 
-	if (not defined $name) {
+	if ( not defined $name ) {
 		return undef;
 	}
 
@@ -128,6 +130,22 @@ if ( not table_exists('departures') ) {
 	}
 	);
 }
+if ( not table_exists('hr_departures') ) {
+	$dbh->do(
+		qq{
+		create view hr_departures as
+		select train_id, station_codes.name as hr_station, scheduled_time,
+		delay, is_canceled, stations.name as hr_destination,
+		train_types.name as hr_train_type, train_no,
+		lines.name as hr_line_no, platform
+		from departures
+		join train_types on train_type = train_types.id
+		left outer join lines on line_no = lines.id
+		join station_codes on station = station_codes.id
+		join stations on destination = stations.id
+	}
+	);
+}
 for my $msg ( 1 .. 99 ) {
 	if ( not table_exists("msg_$msg") ) {
 		$dbh->do(
@@ -180,7 +198,7 @@ for my $r ( $status->results ) {
 
 	my $destination_id = get_id( 'stations',    $r->destination );
 	my $type_id        = get_id( 'train_types', $r->type );
-	my $line_id        = get_id( 'lines', $r->line_no );
+	my $line_id        = get_id( 'lines',       $r->line_no );
 	my $sched_platform = int_or_undef( $r->sched_platform );
 
 	if (
