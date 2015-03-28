@@ -17,6 +17,14 @@
 </div>
 <div class="field">
   <div class="desc">
+    Zugnummer:
+  </div>
+  <div>
+    %= text_field 'filter_train_no', class => 'train_no'
+  </div>
+</div>
+<div class="field">
+  <div class="desc">
     Bahnhof:
   </div>
   <div>

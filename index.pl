@@ -223,6 +223,7 @@ helper parse_filter_args => sub {
 
 	my %filter = (
 		line        => scalar $self->param('filter_line'),
+		train_no    => scalar $self->param('filter_train_no'),
 		train_type  => scalar $self->param('filter_train_type'),
 		station     => scalar $self->param('filter_station'),
 		destination => scalar $self->param('filter_destination'),
@@ -238,6 +239,8 @@ helper parse_filter_args => sub {
 	  = length( $filter{delay_min} ) ? int( $filter{delay_min} ) : undef;
 	$filter{delay_max}
 	  = length( $filter{delay_max} ) ? int( $filter{delay_max} ) : undef;
+	$filter{train_no}
+	  = length( $filter{train_no} ) ? int( $filter{train_no} ) : undef;
 
 	if ( $filter{line} ) {
 		my ( $train_type, $line_no ) = split( /\./, $filter{line} );
@@ -257,6 +260,9 @@ helper parse_filter_args => sub {
 	}
 	if ( defined $filter{delay_max} ) {
 		$where_clause .= " and delay <= $filter{delay_max}";
+	}
+	if ( defined $filter{train_no} ) {
+		$where_clause .= " and train_no = $filter{train_no}";
 	}
 
 	return ( \%filter, $where_clause );
@@ -561,13 +567,27 @@ get '/bar' => sub {
 			'Linie ' . $self->translate_filter_arg( 'line', @translate_args ) );
 	}
 	if ( $self->param('filter_train_type') ) {
-		push(
-			@title_filter_strings,
-			'Zugtyp '
-			  . $self->translate_filter_arg(
-				'train_type', $self->param('filter_train_type')
-			  )
-		);
+		if ( $self->param('filter_train_no') ) {
+			push(
+				@title_filter_strings,
+				$self->translate_filter_arg( 'train_type',
+					$self->param('filter_train_type') )
+				  . q{ }
+				  . $self->param('filter_train_no')
+			);
+		}
+		else {
+			push(
+				@title_filter_strings,
+				'Zugtyp '
+				  . $self->translate_filter_arg(
+					'train_type', $self->param('filter_train_type')
+				  )
+			);
+		}
+	}
+	elsif ( $self->param('filter_train_no') ) {
+		push( @title_filter_strings, 'Zug ' . $self->param('filter_train_no') );
 	}
 	if ( $self->param('filter_station') ) {
 		push(

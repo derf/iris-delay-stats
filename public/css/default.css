@@ -34,6 +34,10 @@ input.delay {
 	width: 3em;
 }
 
+input.train_no {
+	width: 4em;
+}
+
 div.field {
 	width: 100%;
 	clear: both;
