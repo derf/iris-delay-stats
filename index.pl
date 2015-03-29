@@ -641,6 +641,55 @@ get '/bar' => sub {
 	return;
 };
 
+get '/individual' => sub {
+	my $self         = shift;
+	my $where_clause = '1=1';
+	my $order_param  = $self->param('order_by') || 'scheduled_time.d';
+	my $order;
+
+	my ( $filter, $filter_clause ) = $self->parse_filter_args;
+	my $dbh = $self->app->dbh;
+	$where_clause .= $filter_clause;
+
+	given ($order_param) {
+		when ('scheduled_time.d') { $order = 'scheduled_time desc' }
+		when ('scheduled_time.a') { $order = 'scheduled_time asc' }
+		when ('delay.d')          { $order = 'delay desc' }
+		when ('delay.a')          { $order = 'delay asc' }
+	}
+
+	if ( $order_param =~ m{ ^ delay }x ) {
+		$where_clause .= ' and delay is not null';
+	}
+
+	my $res = $self->app->dbh->selectall_arrayref(
+		qq{
+		select station_codes.name, scheduled_time, delay, is_canceled,
+		stations.name, train_types.name, train_no, lines.name, platform
+		from departures
+		join station_codes on station = station_codes.id
+		join stations on destination = stations.id
+		join train_types on train_type = train_types.id
+		left outer join lines on line_no = lines.id
+		where $where_clause
+		order by $order
+		limit 1000
+	}
+	);
+
+	for my $row ( @{$res} ) {
+		$row->[0]
+		  = Travel::Status::DE::IRIS::Stations::get_station( $row->[0] )->[1];
+		$row->[4] = decode( 'utf-8', $row->[4] );
+	}
+
+	$self->render(
+		'individuallist',
+		title => 'foo',
+		list  => $res,
+	);
+};
+
 get '/top' => sub {
 	my $self         = shift;
 	my $where_clause = '1=1';

@@ -1,0 +1,49 @@
+%= include 'individualform';
+
+% if (@{$list} == 0) {
+<div class="error">
+Keine Daten mit diesen Parametern gefunden.
+</div>
+% }
+% else {
+<div class="individuallist">
+<table>
+<tr><th>Bahnhof</th><th>Zeit</th><th>Zug</th><th>Nummer</th><th>Richtung</th></tr>
+% for my $entry (@{ stash('list') // [] }) {
+% my ($station, $time, $delay, $canceled, $dest, $train_type, $train_no, $line_no, $platform) = @{$entry};
+<tr>
+<td class="station">
+%= $station
+</td>
+<td class="time">
+%= $time
+% if (defined $delay) {
+% if ($delay < 0) {
+<span class="undelay"><%= $delay %></span>
+% }
+% elsif ($delay == 0) {
+<span class="delay0">+0</span>
+% }
+% else {
+<span class="delay">+<%= $delay %></span>
+% }
+% }
+</td>
+<td class="train">
+%= $train_type;
+
+% if ($line_no) {
+%= $line_no;
+%}
+</td>
+<td class="train_no">
+%= $train_no
+</td>
+<td class="destination">
+%= $dest
+</td>
+</tr>
+% }
+</table>
+</div>
+% }

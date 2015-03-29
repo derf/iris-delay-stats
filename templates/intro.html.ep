@@ -57,4 +57,6 @@ dabei ist ein Zug durchschnittlich
 <br/>
 <b>Top-Liste</b>:
 %= include 'topform';
+<b>Einzelne Züge</b>
+%= include 'individualform';
 </div>

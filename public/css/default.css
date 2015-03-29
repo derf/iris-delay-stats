@@ -50,6 +50,30 @@ div.field div.desc {
 	padding-right: 0.5em;
 }
 
+div.individuallist table {
+	margin-top: 1em;
+	border-collapse: collapse;
+}
+
+div.individuallist th,
+div.individuallist td {
+	border: 1px solid #bbbbbb;
+	margin: 0;
+	padding: 0.2em;
+}
+
+div.individuallist span.undelay {
+	color: #008800;
+}
+
+div.individuallist span.delay0 {
+	color: #888888;
+}
+
+div.individuallist span.delay {
+	color: #880000;
+}
+
 svg {
   font: 10px sans-serif;
 }
