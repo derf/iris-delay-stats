@@ -62,6 +62,11 @@ div.individuallist td {
 	padding: 0.2em;
 }
 
+div.individuallist .cancelled {
+	text-decoration: line-through;
+	text-decoration-color: red;
+}
+
 div.individuallist span.undelay {
 	color: #008800;
 }

@@ -15,7 +15,7 @@ Keine Daten mit diesen Parametern gefunden.
 <td class="station">
 %= $station
 </td>
-<td class="time">
+<td class="time <%= $canceled ? 'cancelled' : q{} %>">
 %= $time
 % if (defined $delay) {
 % if ($delay < 0) {
