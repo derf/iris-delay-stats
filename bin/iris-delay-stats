@@ -130,6 +130,27 @@ if ( not table_exists('departures') ) {
 	}
 	);
 }
+if ( not table_exists('departures_with_messages') ) {
+
+	# only for testing, too inefficient for production
+	# (the current schema saves lots of disk space, but not computation time)
+	$dbh->do(
+		qq{
+		create view departures_with_messages as
+		select train_id, station, scheduled_time, delay, is_canceled,
+		destination, train_type, train_no, line_no, platform, }
+		  . join( ", ",
+			map { "(msgtable${_}.train_id is not null) as msg${_}" }
+			  ( 1 .. 99 ) )
+		  . " from departures "
+		  . join(
+			" ",
+			map {
+"left outer join msg_$_ as msgtable$_ using (scheduled_time, train_id)"
+			} ( 1 .. 99 )
+		  )
+	);
+}
 if ( not table_exists('hr_departures') ) {
 	$dbh->do(
 		qq{
