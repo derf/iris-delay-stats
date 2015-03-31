@@ -2,7 +2,7 @@
 
 %= javascript begin
 
-show_bargraph('/2ddata.tsv?aggregate=<%= param('xsource') %>&metric=<%= param('ysource') %>&msgnum=<%= param('msgnum') %>&filter_line=<%= param('filter_line') %>&filter_train_no=<%= param('filter_train_no') %>&filter_train_type=<%= param('filter_train_type') %>&filter_station=<%= param('filter_station') %>&filter_destination=<%= param('filter_destination') %>&filter_delay_min=<%= param('filter_delay_min') %>&filter_delay_max=<%= param('filter_delay_max') %>',
+show_bargraph('/2ddata.tsv?aggregate=<%= param('xsource') %>&metric=<%= param('ysource') %>&msgnum=<%= param('msgnum') %>&filter_line=<%= param('filter_line') %>&filter_train_no=<%= param('filter_train_no') %>&filter_train_type=<%= param('filter_train_type') %>&filter_station=<%= param('filter_station') %>&filter_destination=<%= param('filter_destination') %>&filter_delay_min=<%= param('filter_delay_min') %>&filter_delay_max=<%= param('filter_delay_max') %>&filter_date_start=<%= param('filter_date_start') %>&filter_date_stop=<%= param('filter_date_stop') %>',
 	'<%== param('title') %>',
 	'<%= param('xlabel') %>', '<%= param('ylabel') %>', '<%= param('yformat') %>',
 	'<%= param('width') %>', '<%= param('height') %>');

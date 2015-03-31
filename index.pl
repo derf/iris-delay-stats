@@ -229,6 +229,8 @@ helper parse_filter_args => sub {
 		destination => scalar $self->param('filter_destination'),
 		delay_min   => scalar $self->param('filter_delay_min'),
 		delay_max   => scalar $self->param('filter_delay_max'),
+		date_start  => scalar $self->param('filter_date_start'),
+		date_stop   => scalar $self->param('filter_date_stop'),
 	);
 
 	for my $key ( keys %filter ) {
@@ -254,6 +256,12 @@ helper parse_filter_args => sub {
 	}
 	if ( $filter{destination} ) {
 		$where_clause .= " and destination = '$filter{destination}'";
+	}
+	if ( $filter{date_start} ) {
+		$where_clause .= " and scheduled_time >= '$filter{date_start}'";
+	}
+	if ( $filter{date_stop} ) {
+		$where_clause .= " and scheduled_time < '$filter{date_stop}'";
 	}
 	if ( defined $filter{delay_min} ) {
 		$where_clause .= " and delay >= $filter{delay_min}";
@@ -611,6 +619,14 @@ get '/bar' => sub {
 				)
 			  )
 		);
+	}
+	if ( $self->param('filter_date_start') ) {
+		push( @title_filter_strings,
+			'ab ' . $self->param('filter_date_start') );
+	}
+	if ( $self->param('filter_date_stop') ) {
+		push( @title_filter_strings,
+			'vor ' . $self->param('filter_date_stop') );
 	}
 	if (@title_filter_strings) {
 		$title .= ' (' . join( ', ', @title_filter_strings ) . ')';

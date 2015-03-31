@@ -48,6 +48,17 @@
     und
     %= text_field 'filter_delay_max', class => 'delay', placeholder => '+∞'
     Minuten (inklusive).
+  </div>
+</div>
+<div class="field">
+  <div class="desc">
+    Zeitraum von
+  </div>
+  <div>
+    %= date_field 'filter_date_start', class => 'datetime'
+    (inklusive) bis
+    %= date_field 'filter_date_stop', class => 'datetime'
+    (exklusive)
     %= submit_button 'Go'
   </div>
 </div>
