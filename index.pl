@@ -663,6 +663,7 @@ get '/individual' => sub {
 	my $order_param  = $self->param('order_by') || 'scheduled_time.d';
 	my $order;
 
+	my %translation = Travel::Status::DE::IRIS::Result::dump_message_codes();
 	my ( $filter, $filter_clause ) = $self->parse_filter_args;
 	my $dbh = $self->app->dbh;
 	$where_clause .= $filter_clause;
@@ -678,7 +679,8 @@ get '/individual' => sub {
 		$where_clause .= ' and delay is not null';
 	}
 
-	my $res = $self->app->dbh->selectall_arrayref(
+	my $messages = [];
+	my $res      = $self->app->dbh->selectall_arrayref(
 		qq{
 		select station_codes.name, scheduled_time, delay, is_canceled,
 		stations.name, train_types.name, train_no, lines.name, platform
@@ -693,10 +695,31 @@ get '/individual' => sub {
 	}
 	);
 
-	for my $row ( @{$res} ) {
+	for my $msg ( 1 .. 99 ) {
+		my $msg_res = $self->app->dbh->selectall_arrayref(
+			qq{
+			select (msgtable.train_id is not null)
+			from departures
+			left outer join msg_$msg as msgtable
+			using (scheduled_time, train_id)
+			where $where_clause
+			order by $order
+			limit 1000
+			}
+		);
+		for my $i ( 0 .. $#{$res} ) {
+			if ( $msg_res->[$i][0] ) {
+				push( @{ $messages->[$i] }, $translation{$msg} // $msg );
+			}
+		}
+	}
+
+	for my $i ( 0 .. $#{$res} ) {
+		my $row = $res->[$i];
 		$row->[0]
 		  = Travel::Status::DE::IRIS::Stations::get_station( $row->[0] )->[1];
 		$row->[4] = decode( 'utf-8', $row->[4] );
+		push( @{$row}, $messages->[$i] );
 	}
 
 	$self->render(

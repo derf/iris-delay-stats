@@ -8,9 +8,9 @@ Keine Daten mit diesen Parametern gefunden.
 % else {
 <div class="individuallist">
 <table>
-<tr><th>Bahnhof</th><th>Zeit</th><th>Zug</th><th>Nummer</th><th>Richtung</th></tr>
+<tr><th>Bahnhof</th><th>Zeit</th><th>Zug</th><th>Nummer</th><th>Richtung</th><th>Meldungen</th></tr>
 % for my $entry (@{ stash('list') // [] }) {
-% my ($station, $time, $delay, $canceled, $dest, $train_type, $train_no, $line_no, $platform) = @{$entry};
+% my ($station, $time, $delay, $canceled, $dest, $train_type, $train_no, $line_no, $platform, $messages) = @{$entry};
 <tr>
 <td class="station">
 %= $station
@@ -41,6 +41,11 @@ Keine Daten mit diesen Parametern gefunden.
 </td>
 <td class="destination">
 %= $dest
+</td>
+<td class="messages">
+% for my $msg (@{$messages // []}) {
+<%= $msg %><br/>
+% }
 </td>
 </tr>
 % }
