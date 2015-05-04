@@ -222,19 +222,20 @@ helper parse_filter_args => sub {
 	my $where_clause = q{};
 
 	my %filter = (
-		line        => scalar $self->param('filter_line'),
-		train_no    => scalar $self->param('filter_train_no'),
-		train_type  => scalar $self->param('filter_train_type'),
-		station     => scalar $self->param('filter_station'),
-		destination => scalar $self->param('filter_destination'),
-		delay_min   => scalar $self->param('filter_delay_min'),
-		delay_max   => scalar $self->param('filter_delay_max'),
-		date_start  => scalar $self->param('filter_date_start'),
-		date_stop   => scalar $self->param('filter_date_stop'),
+		line         => scalar $self->param('filter_line'),
+		train_no     => scalar $self->param('filter_train_no'),
+		train_type   => scalar $self->param('filter_train_type'),
+		station      => scalar $self->param('filter_station'),
+		destination  => scalar $self->param('filter_destination'),
+		cancellation => scalar $self->param('filter_cancellation'),
+		delay_min    => scalar $self->param('filter_delay_min'),
+		delay_max    => scalar $self->param('filter_delay_max'),
+		date_start   => scalar $self->param('filter_date_start'),
+		date_stop    => scalar $self->param('filter_date_stop'),
 	);
 
 	for my $key ( keys %filter ) {
-		$filter{$key} =~ tr{.a-zA-Z0-9öäüÖÄÜß }{}cd;
+		$filter{$key} =~ tr{._a-zA-Z0-9öäüÖÄÜß }{}cd;
 	}
 
 	$filter{delay_min}
@@ -256,6 +257,14 @@ helper parse_filter_args => sub {
 	}
 	if ( $filter{destination} ) {
 		$where_clause .= " and destination = '$filter{destination}'";
+	}
+	if ( $filter{cancellation} ) {
+		if ( $filter{cancellation} eq 'only_cancelled' ) {
+			$where_clause .= ' and is_canceled';
+		}
+		else {
+			$where_clause .= ' and not is_canceled';
+		}
 	}
 	if ( $filter{date_start} ) {
 		$where_clause .= " and scheduled_time >= '$filter{date_start}'";

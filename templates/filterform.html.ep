@@ -41,6 +41,14 @@
 </div>
 <div class="field">
   <div class="desc">
+    Fahrten:
+  </div>
+  <div>
+    %= select_field filter_cancellation => [['Alle' => q{}], ['Ohne Zugausfälle' => 'no_cancelled'], ['Nur Zugausfälle' => 'only_cancelled']]
+  </div>
+</div>
+<div class="field">
+  <div class="desc">
     Verspätung zwischen
   </div>
   <div>
