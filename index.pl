@@ -381,10 +381,9 @@ helper 'get_2ddata' => sub {
 
 	given ($metric) {
 		when ('avg_delay') {
-			$header = [qw[x y y_total y_stddev]];
+			$header = [qw[x y y_total]];
 			$query  = qq{
-				select $format as aggregate, avg(delay), count(delay),
-				stddev_samp(delay)
+				select $format as aggregate, avg(delay), count(delay)
 				from departures
 				$join_clause
 				where not is_canceled and $where_clause
