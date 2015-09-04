@@ -331,7 +331,7 @@ get '/by_hour.json' => sub {
 	return;
 };
 
-get '/2ddata.tsv' => sub {
+helper 'get_2ddata' => sub {
 	my $self      = shift;
 	my $aggregate = $self->param('aggregate') // 'hour';
 	my $metric    = $self->param('metric') // 'avg_delay';
@@ -348,7 +348,7 @@ get '/2ddata.tsv' => sub {
 	my $where_clause = '1 = 1';
 	my $join_clause  = q{};
 
-	my $res;
+	my $header;
 
 	my $query;
 	my $format = 'extract(hour from scheduled_time at time zone \'GMT\')';
@@ -381,8 +381,8 @@ get '/2ddata.tsv' => sub {
 
 	given ($metric) {
 		when ('avg_delay') {
-			$res   = "x\ty\ty_total\ty_stddev\n";
-			$query = qq{
+			$header = [qw[x y y_total y_stddev]];
+			$query  = qq{
 				select $format as aggregate, avg(delay), count(delay),
 				stddev_samp(delay)
 				from departures
@@ -393,8 +393,8 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('cancel_num') {
-			$res   = "x\ty\ty_total\n";
-			$query = qq{
+			$header = [qw[x y y_total]];
+			$query  = qq{
 				select $format as aggregate, count(*), count(*)
 				from departures
 				$join_clause
@@ -404,8 +404,8 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('cancel_rate') {
-			$res   = "x\ty\ty_total\ty_matched\n";
-			$query = qq{
+			$header = [qw[x y y_total y_matched]];
+			$query  = qq{
 				select $format as aggregate, avg(is_canceled::int), count(is_canceled),
 					sum(is_canceled::int)
 				from departures
@@ -416,8 +416,8 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('delay0_rate') {
-			$res   = "x\ty\ty_total\ty_matched\n";
-			$query = qq{
+			$header = [qw[x y y_total y_matched]];
+			$query  = qq{
 				select $format as aggregate, avg((delay < 1)::int), count(delay),
 					sum((delay < 1)::int)
 				from departures
@@ -428,8 +428,8 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('delay5_rate') {
-			$res   = "x\ty\ty_total\ty_matched\n";
-			$query = qq{
+			$header = [qw[x y y_total y_matched]];
+			$query  = qq{
 				select $format as aggregate, avg((delay > 5)::int), count(delay),
 					sum((delay > 5)::int)
 				from departures
@@ -440,8 +440,8 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('message_rate') {
-			$res   = "x\ty\ty_total\ty_matched\n";
-			$query = qq{
+			$header = [qw[x y y_total y_matched]];
+			$query  = qq{
 				select $format as aggregate,
 				avg((msgtable.train_id is not null)::int), count(*),
 				sum((msgtable.train_id is not null)::int)
@@ -454,8 +454,8 @@ get '/2ddata.tsv' => sub {
 			};
 		}
 		when ('realtime_rate') {
-			$res   = "x\ty\ty_total\ty_matched\n";
-			$query = qq{
+			$header = [qw[x y y_total y_matched]];
+			$query  = qq{
 				select $format as aggregate, avg((delay is not null)::int),
 					count(*),
 					sum((delay is not null)::int)
@@ -518,6 +518,33 @@ get '/2ddata.tsv' => sub {
 				  ->[1] );
 		}
 	}
+
+	return ( $header, $dbres );
+};
+
+get '/2ddata.json' => sub {
+	my ($self) = shift;
+
+	my ( $header, $dbres ) = $self->get_2ddata;
+
+	my $json = {};
+
+	for my $i ( 0 .. $#{$header} ) {
+		$json->{data}->{ $header->[$i] } = [ map { $_->[$i] } @{$dbres} ];
+	}
+
+	$self->render(
+		json => $json,
+	);
+	return;
+};
+
+get '/2ddata.tsv' => sub {
+	my $self = shift;
+
+	my ( $header, $dbres ) = $self->get_2ddata;
+
+	my $res = join( "\t", @{$header} ) . "\n";
 
 	for my $row ( @{$dbres} ) {
 		if ( $row and @{$row} ) {
