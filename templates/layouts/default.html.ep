@@ -2,33 +2,51 @@
 <html>
 <head>
 	<title><%= stash('title') ? "dbdb - " . stash('title') : 'dbdb' %></title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="msapplication-tap-highlight" content="no">
 	<meta charset="utf-8">
-% if ($self->stash('refresh_interval')) {
-	<meta http-equiv="refresh" content="<%= $self->stash('refresh_interval') %>"/>
-% }
+	% if ($self->stash('refresh_interval')) {
+		<meta http-equiv="refresh" content="<%= $self->stash('refresh_interval') %>"/>
+		% }
 
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/css/materialize.css">
 
-	%= stylesheet '/css/default.css'
-	%= javascript '/js/d3.min.js'
-	%= javascript '/js/d3.tip.v0.6.3.js'
-	%= javascript '/js/d3funcs.js'
-</head>
-<body style="<%= (stash('hide_opts') ? 'margin: 0; padding: 0;' : q{}) %>">
+		%= stylesheet '/css/default.css'
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.0/js/materialize.min.js"></script>
+		%= javascript '/js/d3.min.js'
+		%= javascript '/js/d3.tip.v0.6.3.js'
+		%= javascript '/js/d3funcs.js'
 
-% if (my $error = stash 'error') {
-<div class="error">Backend-Fehler:</div>
-<div>
-<pre>
-%= $error
-</pre>
-</div>
-% }
+		<script>
+		$(document).ready(function() {
+			$('select').material_select();
+			$('.datepicker').pickadate({
+				selectMonths: true, // Creates a dropdown to control month
+				selectYears: 15 // Creates a dropdown of 15 years to control year
+			});
+			$('ul.tabs').tabs();
+		});
+		</script>
+	</head>
+	<body>
 
-%= content
+		% if (my $error = stash 'error') {
+			<div class="error">Backend-Fehler:</div>
+			<div>
+				<pre>
+					%= $error
+				</pre>
+			</div>
+			% }
 
-<div class="about">
-version <%= stash('version') // '???' %>
-</div>
+			%= content
 
-</body>
-</html>
+			<div class="about">
+				version <%= stash('version') // '???' %>
+			</div>
+
+		</body>
+		</html>

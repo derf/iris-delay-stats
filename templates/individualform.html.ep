@@ -1,10 +1,11 @@
-<div>
 Details zu individuellen Zugfahrten. Es werden nur maximal 1000 Ergebnisse
 angezeigt.
 %= form_for individual => begin
-Sortieren nach:
-%= select_field order_by => [['Zeit ↓', 'scheduled_time.d'], ['Zeit ↑', 'scheduled_time.a'], ['Verspätung ↓', 'delay.d'], ['Verspätung ↑', 'delay.a']]
-%= submit_button 'Go';
-<br/>
+<div class="row">
+  <div class="input-field col s12">
+    <label class="active">Sortierung</label>
+    %= select_field order_by => [['Zeit ↓', 'scheduled_time.d'], ['Zeit ↑', 'scheduled_time.a'], ['Verspätung ↓', 'delay.d'], ['Verspätung ↑', 'delay.a']]
+  </div>
+</div>
 %= include 'filterform';
 % end

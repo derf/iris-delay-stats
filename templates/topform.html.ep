@@ -1,6 +1,3 @@
-<div>
 %= form_for top => begin
-Nach Häufigkeit sortierte Verspätungs- und Qualitätsmeldungen.
-Die Einschränkungen sind alle optional.
 %= include 'filterform';
 % end
