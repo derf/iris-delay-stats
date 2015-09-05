@@ -1,0 +1,31 @@
+% if (not defined param('want_msg')) {
+  %   param(want_msg => 0);
+  % }
+  %= form_for bar => begin
+  <input type="hidden" value="0" name="want_msg"/>
+  <div class="row">
+    <div class="input-field col s12">
+      <label class="active">Bartyp</label>
+      % my %yargs = %{$self->barplot_args->{y}};
+      % my @yarg_keys = sort keys %yargs;
+      %= select_field ysource => [map {[$yargs{$_}->{desc}, $_]} @yarg_keys]
+    </div>
+  </div>
+  <div class="row">
+    <div class="input-field col s4">
+      <label class="active">aufgeteilt nach</label>
+      % my %xargs = %{$self->barplot_args->{x}};
+      % my @xarg_keys = sort keys %xargs;
+      %= select_field xsource => [map {[$xargs{$_}->{desc}, $_]} @xarg_keys]
+    </div>
+    <div class="input-field col s4">
+      <label>Breite</label>
+      %= text_field 'width' => 960, class => 'dimension'
+    </div>
+    <div class="input-field col s4">
+      <label>Höhe</label>
+      %= text_field 'height' => 500, class => 'dimension'
+    </div>
+  </div>
+  %= include 'filterform';
+  % end
