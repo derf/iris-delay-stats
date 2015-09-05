@@ -29,6 +29,9 @@ Alle 10 Minuten werden folgende Bahnhöfe abgefragt:
 </ul>
 Die Liste kann noch erweitert werden, mehr als 10 Bahnhöfe sollten es aber
 nicht werden.
+% if ( -e 'public/dbdb-dump.csv.xz' ) {
+Es gibt auch einen <a href="/dbdb-dump.csv.xz">Datenbankdump (CSV)</a>.
+% }
 </div>
 
 <div class="globalstats">
