@@ -21,15 +21,20 @@
 
 <b>Datengrundlage</b>
 <div class="stationlist">
-  Alle 10 Minuten werden folgende Bahnhöfe abgefragt:
-  <ul>
-    % for my $station (@{$stats->{stationlist}}) {
-      <li><%= $station %></li>
-      % }
-    </ul>
-    Die Liste kann noch erweitert werden, mehr als 10 Bahnhöfe sollten es aber
-    nicht werden.
-  </div>
+Alle 10 Minuten werden folgende Bahnhöfe abgefragt:
+<ul>
+% for my $station (@{$stats->{stationlist}}) {
+<li><%= $station %></li>
+% }
+</ul>
+Die Liste kann noch erweitert werden, mehr als 10 Bahnhöfe sollten es aber
+nicht werden.
+% if ( -e 'public/dbdb-dump.csv.xz' ) {
+Es gibt auch einen <a href="/dbdb-dump.csv.xz">Datenbankdump (CSV)</a>,
+Bedeutung der msg-Spalten siehe
+<a href="http://man.finalrewind.org/3/Travel-Status-DE-IRIS-Result/#MESSAGES">IRIS-Result-Dokumentation</a>.
+% }
+</div>
 
   <div class="globalstats">
     In der Datenbank sind <b><%= $stats->{departures} %></b> Fahrten
