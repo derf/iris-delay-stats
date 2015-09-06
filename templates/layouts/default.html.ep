@@ -45,7 +45,7 @@
 			%= content
 
 			<div class="about">
-				version <%= stash('version') // '???' %>
+				dbdb v<%= stash('version') // '???' %>
 			</div>
 
 		</body>
