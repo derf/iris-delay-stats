@@ -1,72 +1,55 @@
 % my $filter_opts = $self->barplot_filters;
-<div class="field">
-  <div class="desc">
-    Linie:
-  </div>
-  <div>
+<div class="row">
+  <div class="input-field col s4">
+    <label class="active">Linie</label>
     %= select_field filter_line => $filter_opts->{lines}
   </div>
-</div>
-<div class="field">
-  <div class="desc">
-    Zugtyp:
-  </div>
-  <div>
+  <div class="input-field col s4">
+    <label class="active">Zugtyp</label>
     %= select_field filter_train_type => $filter_opts->{train_types}
   </div>
-</div>
-<div class="field">
-  <div class="desc">
-    Zugnummer:
-  </div>
-  <div>
+  <div class="input-field col s4">
+    <label>Zugnummer</label>
     %= text_field 'filter_train_no', class => 'train_no'
   </div>
 </div>
-<div class="field">
-  <div class="desc">
-    Bahnhof:
-  </div>
-  <div>
+<div class="row">
+  <div class="input-field col s6">
+    <label class="active">Bahnhof</label>
     %= select_field filter_station => $filter_opts->{stations}
   </div>
-</div>
-<div class="field">
-  <div class="desc">
-    Zielbahnhof:
-  </div>
-  <div>
+  <div class="input-field col s6">
+    <label class="active">Zielbahnhof</label>
     %= select_field filter_destination => $filter_opts->{destinations}
   </div>
 </div>
-<div class="field">
-  <div class="desc">
-    Fahrten:
-  </div>
-  <div>
+<div class="row">
+  <div class="input-field col s12">
+    <label class="active">Ausfälle</label>
     %= select_field filter_cancellation => [['Alle' => q{}], ['Ohne Zugausfälle' => 'no_cancelled'], ['Nur Zugausfälle' => 'only_cancelled']]
   </div>
 </div>
-<div class="field">
-  <div class="desc">
-    Verspätung zwischen
-  </div>
-  <div>
+<div class="row">
+  <div class="input-field col s3">
+    <label>Verspätung Min</label>
     %= text_field 'filter_delay_min', class => 'delay', placeholder => '-∞'
-    und
+  </div>
+  <div class="input-field col s3">
+    <label>Verspätung Max</label>
     %= text_field 'filter_delay_max', class => 'delay', placeholder => '+∞'
-    Minuten (inklusive).
+  </div>
+  <div class="input-field col s3">
+    <label>Start</label>
+    %= date_field 'filter_date_start', class => 'datepicker'
+  </div>
+  <div class="input-field col s3">
+    <label>Ende</label>
+    %= date_field 'filter_date_stop', class => 'datepicker'
   </div>
 </div>
-<div class="field">
-  <div class="desc">
-    Zeitraum von
-  </div>
-  <div>
-    %= date_field 'filter_date_start', class => 'datetime'
-    (inklusive) bis
-    %= date_field 'filter_date_stop', class => 'datetime'
-    (exklusive)
-    %= submit_button 'Go'
+<div class="row">
+  <div class="col offset-s5">
+    <button class="btn waves-effect waves-light" type="submit" name="action">Submit<i class="material-icons right">send</i>
+    </button>
   </div>
 </div>
