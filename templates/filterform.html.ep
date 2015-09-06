@@ -2,11 +2,11 @@
 <div class="row">
   <div class="input-field col s4">
     <label class="active">Linie</label>
-    %= select_field filter_line => $filter_opts->{lines}
+    %= select_field filter_line => $filter_opts->{lines}, class => 'browser-default'
   </div>
   <div class="input-field col s4">
     <label class="active">Zugtyp</label>
-    %= select_field filter_train_type => $filter_opts->{train_types}
+    %= select_field filter_train_type => $filter_opts->{train_types}, class => 'browser-default'
   </div>
   <div class="input-field col s4">
     <label>Zugnummer</label>
@@ -16,17 +16,17 @@
 <div class="row">
   <div class="input-field col s6">
     <label class="active">Bahnhof</label>
-    %= select_field filter_station => $filter_opts->{stations}
+    %= select_field filter_station => $filter_opts->{stations}, class => 'browser-default'
   </div>
   <div class="input-field col s6">
     <label class="active">Zielbahnhof</label>
-    %= select_field filter_destination => $filter_opts->{destinations}
+    %= select_field filter_destination => $filter_opts->{destinations}, class => 'browser-default'
   </div>
 </div>
 <div class="row">
   <div class="input-field col s12">
     <label class="active">Ausfälle</label>
-    %= select_field filter_cancellation => [['Alle' => q{}], ['Ohne Zugausfälle' => 'no_cancelled'], ['Nur Zugausfälle' => 'only_cancelled']]
+    %= select_field filter_cancellation => [['Alle' => q{}], ['Ohne Zugausfälle' => 'no_cancelled'], ['Nur Zugausfälle' => 'only_cancelled']], class => 'browser-default'
   </div>
 </div>
 <div class="row">

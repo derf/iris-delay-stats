@@ -8,7 +8,7 @@
       <label class="active">Bartyp</label>
       % my %yargs = %{$self->barplot_args->{y}};
       % my @yarg_keys = sort keys %yargs;
-      %= select_field ysource => [map {[$yargs{$_}->{desc}, $_]} @yarg_keys]
+      %= select_field ysource => [map {[$yargs{$_}->{desc}, $_]} @yarg_keys], class => 'browser-default'
     </div>
   </div>
   <div class="row">
@@ -16,7 +16,7 @@
       <label class="active">aufgeteilt nach</label>
       % my %xargs = %{$self->barplot_args->{x}};
       % my @xarg_keys = sort keys %xargs;
-      %= select_field xsource => [map {[$xargs{$_}->{desc}, $_]} @xarg_keys]
+      %= select_field xsource => [map {[$xargs{$_}->{desc}, $_]} @xarg_keys], class => 'browser-default'
     </div>
     <div class="input-field col s4">
       <label>Breite</label>
