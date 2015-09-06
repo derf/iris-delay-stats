@@ -23,6 +23,35 @@ div.about {
 	color: #666666;
 }
 
+div.individuallist table {
+	border-collapse: collapse;
+}
+
+div.individuallist th,
+div.individuallist td {
+	border: 1px solid #bbbbbb;
+	margin: 0;
+	padding: 0.2em;
+}
+
+div.individuallist .cancelled {
+	text-decoration: line-through;
+	text-decoration-color: red;
+}
+
+div.individuallist span.undelay {
+	color: #008800;
+}
+
+div.individuallist span.delay0 {
+	color: #888888;
+}
+
+div.individuallist span.delay {
+	color: #880000;
+}
+
+
 svg {
   font: 10px sans-serif;
 }
