@@ -1,3 +1,9 @@
+Bargraph für die Häufigkeit einer Qualitätseinschränkung / eines
+Verspätungsgrundes pro Bahnhof oder Zeiteinheit. Dabei wird nicht
+berücksichtigt, wann/wo etwas aufgetreten ist, sondern wie viele Abfahrten zu
+einer bestimmten Zeiteinheit / an einem bestimmten Bahnhof eine solche Meldung
+eingetragen hatten.  Alle Eingabefelder sind optional.
+
 % if (not defined param('want_msg')) {
   %   param(want_msg => 1);
   % }

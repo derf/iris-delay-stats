@@ -1,3 +1,6 @@
+Häufigkeit der Servicemeldungen und Verspätungsgründe über alle bekannten
+Abfahrten. Alle Eingabefelder sind optional.
+
 %= form_for top => begin
 %= include 'filterform';
 % end

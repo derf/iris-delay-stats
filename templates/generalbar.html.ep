@@ -1,3 +1,6 @@
+Bargraph für allgemeine Metriken wie z.B. Verspätung oder Zugausfälle pro
+Bahnhof oder Zeiteinheit. Alle Eingabefelder sind optional.
+
 % if (not defined param('want_msg')) {
   %   param(want_msg => 0);
   % }
