@@ -18,8 +18,10 @@ app->attr(
 		my $self = shift;
 
 		my $dbname = 'dbdb';
+		my $host = $ENV{DBDB_HOST} // 'localhost';
+		my $port = $ENV{DBDB_PORT} // '5432';
 		my $dbh
-		  = DBI->connect( "dbi:Pg:dbname=$dbname;host=localhost;port=5432",
+		  = DBI->connect( "dbi:Pg:dbname=$dbname;host=$host;port=$port",
 			'dbdb', $ENV{DBDB_PASSWORD}, { RaiseError => 1 } );
 
 		return $dbh;
