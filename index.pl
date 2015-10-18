@@ -18,10 +18,9 @@ app->attr(
 		my $self = shift;
 
 		my $dbname = 'dbdb';
-		my $host = $ENV{DBDB_HOST} // 'localhost';
-		my $port = $ENV{DBDB_PORT} // '5432';
-		my $dbh
-		  = DBI->connect( "dbi:Pg:dbname=$dbname;host=$host;port=$port",
+		my $host   = $ENV{DBDB_HOST} // 'localhost';
+		my $port   = $ENV{DBDB_PORT} // '5432';
+		my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=$host;port=$port",
 			'dbdb', $ENV{DBDB_PASSWORD}, { RaiseError => 1 } );
 
 		return $dbh;
@@ -815,7 +814,7 @@ get '/top' => sub {
 app->config(
 	hypnotoad => {
 		accepts  => 10,
-		listen   => ['http://*:8093'],
+		listen   => [ $ENV{DBDB_LISTEN} // 'http://*:8093' ],
 		pid_file => '/tmp/dbdb.pid',
 		workers  => $ENV{DBDB_WORKERS} // 2,
 	},
