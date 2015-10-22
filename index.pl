@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 use Mojolicious::Lite;
+use Cache::File;
 use DBI;
 use Encode qw(decode encode);
 use Travel::Status::DE::IRIS;
@@ -97,7 +98,18 @@ helper barplot_filters => sub {
 	my ($self) = @_;
 	my $dbh = $self->app->dbh;
 
-	my $ret = {
+	my $cache = Cache::File->new(
+		cache_root      => '/tmp/dbdb',
+		default_expires => '12 hours',
+		lock_level      => Cache::File::LOCK_LOCAL(),
+	);
+
+	my $ret = $cache->thaw('barplot_filters');
+	if ($ret) {
+		return $ret;
+	}
+
+	$ret = {
 		lines => [
 			q{},
 			map { [ $_->[2] . ' ' . $_->[3], $_->[0] . '.' . $_->[1] ] } @{
@@ -151,6 +163,8 @@ helper barplot_filters => sub {
 		],
 	};
 
+	$cache->freeze( 'barplot_filters', $ret );
+
 	return $ret;
 };
 
@@ -178,6 +192,17 @@ helper globalstats => sub {
 	my ($self) = @_;
 	my $dbh = $self->app->dbh;
 
+	my $cache = Cache::File->new(
+		cache_root      => '/tmp/dbdb',
+		default_expires => '12 hours',
+		lock_level      => Cache::File::LOCK_LOCAL(),
+	);
+
+	my $ret = $cache->thaw('globalstats');
+	if ($ret) {
+		return $ret;
+	}
+
 	my $stations = [
 		map { Travel::Status::DE::IRIS::Stations::get_station($_)->[1] } @{
 			$self->app->dbh->selectcol_arrayref(
@@ -185,7 +210,7 @@ helper globalstats => sub {
 		}
 	];
 
-	my $ret = {
+	$ret = {
 		departures  => $self->count_unique_column(),
 		stationlist => $stations,
 		stations    => $self->count_unique_column('station'),
@@ -214,6 +239,8 @@ helper globalstats => sub {
 		delay_avg => $self->single_query(
 			"select avg(delay) from departures where not is_canceled"),
 	};
+
+	$cache->freeze( 'globalstats', $ret );
 
 	return $ret;
 };
