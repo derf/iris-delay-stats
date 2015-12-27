@@ -775,8 +775,9 @@ get '/individual' => sub {
 
 	$self->render(
 		'individuallist',
-		title => 'foo',
-		list  => $res,
+		title   => 'foo',
+		list    => $res,
+		version => $VERSION,
 	);
 };
 

@@ -1,4 +1,4 @@
-Details zu individuellen Zugfahrten. Es werden nur maximal 1000 Ergebnisse
+Details zu individuellen Zugfahrten. Es werden maximal 100 Ergebnisse
 angezeigt.
 %= form_for individual => begin
 <div class="row">
