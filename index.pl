@@ -742,47 +742,35 @@ get '/individual' => sub {
 		$where_clause .= ' and delay is not null';
 	}
 
-	my $messages = [];
-	my $res      = $self->app->dbh->selectall_arrayref(
+	my $res = $self->app->dbh->selectall_arrayref(
 		qq{
 		select station_codes.name, scheduled_time, delay, is_canceled,
-		stations.name, train_types.name, train_no, lines.name, platform
-		from departures
+		stations.name, train_types.name, train_no, lines.name, platform,
+		}
+		  . join( ', ', map { "msg$_" } ( 1 .. 99 ) ) . qq{
+		from departures_with_messages
 		join station_codes on station = station_codes.id
 		join stations on destination = stations.id
 		join train_types on train_type = train_types.id
 		left outer join lines on line_no = lines.id
 		where $where_clause
 		order by $order
-		limit 1000
+		limit 100
 	}
 	);
 
-	for my $msg ( 1 .. 99 ) {
-		my $msg_res = $self->app->dbh->selectall_arrayref(
-			qq{
-			select (msgtable.train_id is not null)
-			from departures
-			left outer join msg_$msg as msgtable
-			using (scheduled_time, train_id)
-			where $where_clause
-			order by $order
-			limit 1000
-			}
-		);
-		for my $i ( 0 .. $#{$res} ) {
-			if ( $msg_res->[$i][0] ) {
-				push( @{ $messages->[$i] }, $translation{$msg} // $msg );
+	for my $i ( 0 .. $#{$res} ) {
+		my @messages;
+		my $row = $res->[$i];
+		for my $msg ( 1 .. 99 ) {
+			if ( $row->[ 8 + $msg ] ) {
+				push( @messages, $translation{$msg} // $msg );
 			}
 		}
-	}
-
-	for my $i ( 0 .. $#{$res} ) {
-		my $row = $res->[$i];
 		$row->[0]
 		  = Travel::Status::DE::IRIS::Stations::get_station( $row->[0] )->[1];
 		$row->[4] = decode( 'utf-8', $row->[4] );
-		push( @{$row}, $messages->[$i] );
+		$row->[9] = [@messages];
 	}
 
 	$self->render(
