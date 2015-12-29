@@ -8,6 +8,7 @@ div.usage,
 div.stationlist,
 div.globalstats {
 	margin-bottom: 1em;
+	text-align: justify;
 }
 
 div.error {
