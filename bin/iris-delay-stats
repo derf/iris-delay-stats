@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use 5.010;
 
+use Cache::File;
 use DBI;
 use List::Util qw(first);
 use Travel::Status::DE::IRIS;
@@ -15,6 +16,12 @@ my $dbname = shift // 'dbdb';
 
 my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=localhost;port=5432",
 	'dbdb', $ENV{DBDB_PASSWORD} );
+
+my $cache = Cache::File->new(
+	cache_root      => '/tmp/dbdb-cache',
+	default_expires => '2 hours',
+	lock_level      => Cache::File::LOCK_LOCAL(),
+);
 
 sub int_or_undef {
 	my ($val) = @_;
@@ -180,8 +187,9 @@ for my $msg ( 1 .. 99 ) {
 }
 
 my $status = Travel::Status::DE::IRIS->new(
-	station   => $station,
-	lookahead => 60
+	station    => $station,
+	lookahead  => 60,
+	main_cache => $cache,
 );
 
 my @fields = (
