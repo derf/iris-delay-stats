@@ -99,7 +99,7 @@ helper barplot_filters => sub {
 	my $dbh = $self->app->dbh;
 
 	my $cache = Cache::File->new(
-		cache_root      => '/tmp/dbdb',
+		cache_root => $ENV{DBDB_CACHE} // '/tmp/dbdb',
 		default_expires => '12 hours',
 		lock_level      => Cache::File::LOCK_LOCAL(),
 	);
