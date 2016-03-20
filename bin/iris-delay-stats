@@ -18,7 +18,7 @@ my $dbh = DBI->connect( "dbi:Pg:dbname=$dbname;host=localhost;port=5432",
 	'dbdb', $ENV{DBDB_PASSWORD} );
 
 my $cache = Cache::File->new(
-	cache_root      => '/tmp/dbdb-cache',
+	cache_root      => '/tmp/dbdb-crawler-cache',
 	default_expires => '2 hours',
 	lock_level      => Cache::File::LOCK_LOCAL(),
 );
