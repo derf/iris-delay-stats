@@ -721,11 +721,12 @@ get '/bar' => sub {
 };
 
 get '/individual' => sub {
-	my $self         = shift;
-	my $where_clause = '1=1';
-	my $order_param  = $self->param('order_by') || 'scheduled_time.d';
+	my $self          = shift;
+	my $where_clause  = '1=1';
+	my $order_param   = $self->param('order_by') || 'scheduled_time.d';
+	my $with_messages = $self->param('with_messages');
 	my $order;
-
+	my $res;
 	my %translation = Travel::Status::DE::IRIS::Result::dump_message_codes();
 	my ( $filter, $filter_clause ) = $self->parse_filter_args;
 	my $dbh = $self->app->dbh;
@@ -742,34 +743,56 @@ get '/individual' => sub {
 		$where_clause .= ' and delay is not null';
 	}
 
-	my $res = $self->app->dbh->selectall_arrayref(
-		qq{
-		select station_codes.name, scheduled_time, delay, is_canceled,
-		stations.name, train_types.name, train_no, lines.name, platform,
+	if ($with_messages) {
+		$res = $self->app->dbh->selectall_arrayref(
+			qq{
+			select station_codes.name, scheduled_time, delay, is_canceled,
+			stations.name, train_types.name, train_no, lines.name, platform,
+			}
+			  . join( ', ', map { "msg$_" } ( 1 .. 99 ) ) . qq{
+			from departures_with_messages
+			join station_codes on station = station_codes.id
+			join stations on destination = stations.id
+			join train_types on train_type = train_types.id
+			left outer join lines on line_no = lines.id
+			where $where_clause
+			order by $order
+			limit 100
 		}
-		  . join( ', ', map { "msg$_" } ( 1 .. 99 ) ) . qq{
-		from departures_with_messages
-		join station_codes on station = station_codes.id
-		join stations on destination = stations.id
-		join train_types on train_type = train_types.id
-		left outer join lines on line_no = lines.id
-		where $where_clause
-		order by $order
-		limit 100
+		);
 	}
-	);
+	else {
+		$res = $self->app->dbh->selectall_arrayref(
+			qq{
+			select station_codes.name, scheduled_time, delay, is_canceled,
+			stations.name, train_types.name, train_no, lines.name, platform
+			from departures
+			join station_codes on station = station_codes.id
+			join stations on destination = stations.id
+			join train_types on train_type = train_types.id
+			left outer join lines on line_no = lines.id
+			where $where_clause
+			order by $order
+			limit 100
+		}
+		);
+	}
 
 	for my $i ( 0 .. $#{$res} ) {
 		my @messages;
 		my $row = $res->[$i];
-		for my $msg ( 1 .. 99 ) {
-			if ( $row->[ 8 + $msg ] ) {
-				push( @messages, $translation{$msg} // $msg );
-			}
-		}
+
 		$row->[0]
 		  = Travel::Status::DE::IRIS::Stations::get_station( $row->[0] )->[1];
-		$row->[9] = [@messages];
+
+		if ($with_messages) {
+			for my $msg ( 1 .. 99 ) {
+				if ( $row->[ 8 + $msg ] ) {
+					push( @messages, $translation{$msg} // $msg );
+				}
+			}
+			$row->[9] = [@messages];
+		}
 	}
 
 	$self->render(

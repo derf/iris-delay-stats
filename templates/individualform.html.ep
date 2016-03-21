@@ -2,9 +2,13 @@ Details zu individuellen Zugfahrten. Es werden maximal 100 Ergebnisse
 angezeigt.
 %= form_for individual => begin
 <div class="row">
-  <div class="input-field col s12">
+  <div class="input-field col s6">
     <label class="active">Sortierung</label>
     %= select_field order_by => [['Zeit ↓', 'scheduled_time.d'], ['Zeit ↑', 'scheduled_time.a'], ['Verspätung ↓', 'delay.d'], ['Verspätung ↑', 'delay.a']]
+  </div>
+  <div class="input-field col s6 checkbox">
+    %= check_box 'with_messages' => 1, id => 'with_messages'
+    <label for="with_messages">Meldungen anzeigen</label>
   </div>
 </div>
 %= include 'filterform';
