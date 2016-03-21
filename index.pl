@@ -769,7 +769,6 @@ get '/individual' => sub {
 		}
 		$row->[0]
 		  = Travel::Status::DE::IRIS::Stations::get_station( $row->[0] )->[1];
-		$row->[4] = decode( 'utf-8', $row->[4] );
 		$row->[9] = [@messages];
 	}
 
