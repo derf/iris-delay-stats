@@ -1,0 +1,18 @@
+#!/bin/zsh
+
+export DBDB_PASSWORD=changeme
+
+SLEEPMIN=60
+SLEEPRAND=60
+
+while sleep $(( SLEEPMIN + (RANDOM % SLEEPRAND) )); do
+	/srv/www/dbdb/bin/iris-delay-stats EE
+	sleep $(( SLEEPMIN + (RANDOM % SLEEPRAND) ))
+	/srv/www/dbdb/bin/iris-delay-stats KD
+	sleep $(( SLEEPMIN + (RANDOM % SLEEPRAND) ))
+	/srv/www/dbdb/bin/iris-delay-stats AH
+	sleep $(( SLEEPMIN + (RANDOM % SLEEPRAND) ))
+	/srv/www/dbdb/bin/iris-delay-stats FF
+	sleep $(( SLEEPMIN + (RANDOM % SLEEPRAND) ))
+	/srv/www/dbdb/bin/iris-delay-stats MH
+done

@@ -1,0 +1,12 @@
+[Unit]
+Description=DBDB / Iris-delay-stats log service
+After=network.target
+
+[Service]
+ExecStart=/srv/www/dbdb/bin/dbdb-logger
+User=www-dbdb
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
