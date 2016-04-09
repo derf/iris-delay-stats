@@ -47,6 +47,9 @@ helper barplot_args => sub {
 			line => {
 				desc => 'Linie',
 			},
+			month => {
+				desc => 'Monat',
+			},
 			station => {
 				desc => 'Bahnhof',
 			},
@@ -368,6 +371,8 @@ helper 'get_2ddata' => sub {
 	my ( $filter, $filter_clause ) = $self->parse_filter_args;
 
 	my @weekdays = qw(So Mo Di Mi Do Fr Sa);
+	my @months   = qw(BUG Jan Feb Mär Apr Mai Jun Jul Aug Sep Okt Nov Dez);
+	$months[3] = encode( 'utf-8', $months[3] );
 
 	if ( $msgnum < 0 or $msgnum > 99 ) {
 		$msgnum = 0;
@@ -388,6 +393,9 @@ helper 'get_2ddata' => sub {
 		when ('weekhour') {
 			$format
 			  = 'extract(dow from scheduled_time at time zone \'GMT\') || \' \' || to_char(scheduled_time at time zone \'GMT\', \'HH24\')';
+		}
+		when ('month') {
+			$format = 'extract(month from scheduled_time at time zone \'GMT\')';
 		}
 		when ('line') {
 			$format       = 'train_types.name || \' \' || lines.name';
@@ -504,6 +512,11 @@ helper 'get_2ddata' => sub {
 
 		# SQL starts on sunday, we'd like to start on monday
 		@{$dbres} = ( @{$dbres}[ 1 .. 6 ], $dbres->[0] );
+	}
+	elsif ( $aggregate eq 'month' ) {
+		for my $row ( @{$dbres} ) {
+			splice( @{$row}, 0, 1, $months[ $row->[0] ] );
+		}
 	}
 	elsif ( $aggregate eq 'weekhour' ) {
 
